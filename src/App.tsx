@@ -9,9 +9,7 @@ import ScanRecordPage from "./features/medicine/pages/ScanRecordPage";
 import MedicineDetailPage from "./features/medicine/pages/MedicineDetailPage";
 
 export default function App() {
-  const [fontScale, setFontScale] = useState<FontScale>(() =>
-    fontScaleStorage.get()
-  );
+  const [fontScale] = useState<FontScale>(() => fontScaleStorage.get());
 
   useEffect(() => {
     document.documentElement.setAttribute("data-font-scale", fontScale);
