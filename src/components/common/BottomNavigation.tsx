@@ -4,7 +4,7 @@ import { ROUTES } from "../../constants/routes";
 
 const navItems = [
   { to: ROUTES.HOME, label: "홈", icon: House },
-  { to: ROUTES.SCAN_RECORD, label: "스캔", icon: Camera, center: true },
+  { to: ROUTES.SCAN, label: "스캔", icon: Camera, center: true },
   { to: ROUTES.MY_PAGE, label: "마이", icon: User },
 ];
 
