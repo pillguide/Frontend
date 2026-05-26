@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root { font-size: 16px; }
+:root[data-font-scale="xs"] { font-size: 14px; }
+:root[data-font-scale="sm"] { font-size: 15px; }
+:root[data-font-scale="md"] { font-size: 16px; }
+:root[data-font-scale="lg"] { font-size: 17px; }
+:root[data-font-scale="xl"] { font-size: 18px; }
