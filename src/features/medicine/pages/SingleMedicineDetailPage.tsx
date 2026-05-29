@@ -1,6 +1,6 @@
 // src/features/medicine/pages/SingleMedicineDetailPage.tsx
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronDown, Bell } from "lucide-react";
+import { ChevronDown, Bell } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import * as Accordion from "@radix-ui/react-accordion";
 import MobileLayout from "../../../layout/MobileLayout";
