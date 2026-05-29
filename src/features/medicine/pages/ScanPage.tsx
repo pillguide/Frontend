@@ -1,7 +1,8 @@
+// src/features/medicine/pages/ScanPage.tsx
 import { useState } from "react";
-import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
+import PageHeader from "../../../components/common/PageHeader";
 
 export default function ScanPage() {
   const navigate = useNavigate();
@@ -16,28 +17,22 @@ export default function ScanPage() {
     setLoading(true);
 
     // 발표용: 1.5초 "분석 중" 후 상세페이지로 이동
-    // 나중에 진짜 연결되면 여기서 API 호출하고, 받은 id로 이동하면 됨
     setTimeout(() => {
-      navigate("/medicine/1"); // 이미 만들어둔 MedicineDetailPage로 이동
+      navigate("/medicine/1");
     }, 1500);
   }
 
   return (
     <MobileLayout>
-      <div className="px-5 pt-6">
-        <div className="mb-6 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}>
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold text-slate-900">알약 스캔</h1>
-        </div>
+      <PageHeader title="알약 스캔" />
 
+      <div className="px-5 pt-6">
         <p className="mb-4 text-sm text-slate-600">
           알약들을 밝은 곳 흰 배경에 놓고 한 번에 찍어주세요.
         </p>
 
         {!preview && (
-          <label className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-[24px] border-2 border-dashed border-slate-300 bg-[#f8f8f8] text-slate-400">
+          <label className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-[24px] border-2 border-dashed border-slate-300 bg-white text-slate-400 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <span className="text-5xl">📷</span>
             <span className="mt-3 text-sm">사진 찍기</span>
             <input
@@ -51,7 +46,7 @@ export default function ScanPage() {
         )}
 
         {preview && (
-          <div className="rounded-[24px] bg-[#f8f8f8] p-4">
+          <div className="rounded-[24px] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <img
               src={preview}
               alt="찍은 알약"

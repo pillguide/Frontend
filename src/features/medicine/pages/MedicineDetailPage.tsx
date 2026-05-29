@@ -1,8 +1,9 @@
-import { ChevronLeft } from "lucide-react";
+// src/features/medicine/pages/MedicineDetailPage.tsx
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
 import { medicineDetailMock } from "../mock/medicine.mock";
 import MedicineItemRow from "../components/MedicineItemRow";
+import PageHeader from "../../../components/common/PageHeader";
 
 export default function MedicineDetailPage() {
   const navigate = useNavigate();
@@ -10,15 +11,11 @@ export default function MedicineDetailPage() {
 
   return (
     <MobileLayout>
-      <div className="px-5 pt-6">
-        <div className="mb-5 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}>
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-xl font-bold text-slate-900">약 정보</h1>
-        </div>
+      <PageHeader title="약 정보" />
 
-        <div className="rounded-[28px] bg-[#f8f8f8] p-4">
+      <div className="min-h-screen bg-slate-50 px-5 pt-6 pb-24">
+        {/* Gallery */}
+        <div className="rounded-[28px] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="grid grid-cols-3 gap-3">
             {data.gallery.map((image, index) => (
               <img
@@ -31,20 +28,35 @@ export default function MedicineDetailPage() {
           </div>
         </div>
 
-        <div className="mt-5 rounded-[24px] bg-[#f8f8f8] p-5">
+        {/* Summary */}
+        <div className="mt-4 rounded-[24px] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <h2 className="text-lg font-bold text-slate-900">💊 {data.title}</h2>
-          <p className="mt-4 text-sm text-slate-700">{data.description}</p>
+          <p className="mt-3 text-sm text-slate-700">{data.description}</p>
 
           <div className="mt-4 space-y-2 text-sm">
-            <p className="text-green-600">✅ {data.safeMessage}</p>
-            <p className="text-amber-600">⚠️ {data.warningMessage}</p>
+            {data.safeMessage && (
+              <p className="text-green-600">✅ {data.safeMessage}</p>
+            )}
+            {data.warningMessage && (
+              <p className="rounded-xl bg-amber-50 p-3 text-amber-700">
+                ⚠️ {data.warningMessage}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="mt-5 rounded-[24px] bg-white px-4">
-          {data.medicines.map((medicine) => (
-            <MedicineItemRow key={medicine.id} medicine={medicine} />
-          ))}
+        {/* Medicines list */}
+        <div className="mt-6">
+          <p className="mb-3 text-base font-bold text-slate-900">포함된 약</p>
+          <div className="space-y-2.5">
+            {data.medicines.map((medicine) => (
+              <MedicineItemRow
+                key={medicine.id}
+                medicine={medicine}
+                onClick={() => navigate(`/medicine/single/${medicine.id}`)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </MobileLayout>
