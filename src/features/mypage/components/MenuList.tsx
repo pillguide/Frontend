@@ -10,7 +10,7 @@ export default function MenuList({ menus }: MenuListProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="divide-y divide-slate-200 rounded-[20px] bg-white">
+    <div className="divide-y divide-slate-100 rounded-[20px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
       {menus.map((menu) => (
         <button
           key={menu.id}

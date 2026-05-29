@@ -1,13 +1,18 @@
+// src/features/medicine/components/MedicineItemRow.tsx
 import { ChevronRight } from "lucide-react";
 import type { MedicineItem } from "../types/medicine";
 
 interface MedicineItemRowProps {
   medicine: MedicineItem;
+  onClick?: () => void;
 }
 
-export default function MedicineItemRow({ medicine }: MedicineItemRowProps) {
+export default function MedicineItemRow({ medicine, onClick }: MedicineItemRowProps) {
   return (
-    <div className="flex items-center justify-between border-b border-slate-100 py-4">
+    <button
+      onClick={onClick}
+      className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+    >
       <div className="flex items-center gap-3">
         <img
           src={medicine.imageUrl}
@@ -26,6 +31,6 @@ export default function MedicineItemRow({ medicine }: MedicineItemRowProps) {
         </div>
       </div>
       <ChevronRight size={18} className="text-slate-400" />
-    </div>
+    </button>
   );
 }

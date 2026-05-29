@@ -7,6 +7,7 @@ import MyPage from "./features/mypage/pages/MyPage";
 import ScanPage from "./features/medicine/pages/ScanPage";
 import ScanRecordPage from "./features/medicine/pages/ScanRecordPage";
 import MedicineDetailPage from "./features/medicine/pages/MedicineDetailPage";
+import SingleMedicineDetailPage from "./features/medicine/pages/SingleMedicineDetailPage";
 
 export default function App() {
   const [fontScale] = useState<FontScale>(() => fontScaleStorage.get());
@@ -24,6 +25,8 @@ export default function App() {
         <Route path="/scan" element={<ScanPage />} />
         <Route path="/scan-record" element={<ScanRecordPage />} />
         <Route path="/medicine/:id" element={<MedicineDetailPage />} />
+        <Route path="/medicine/single/:id" element={<SingleMedicineDetailPage />} />
+
       </Routes>
     </BrowserRouter>
   );

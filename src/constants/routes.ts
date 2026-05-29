@@ -3,5 +3,6 @@ export const ROUTES = {
   MY_PAGE: "/mypage",
   SCAN: "/scan",
   SCAN_RECORD: "/scan-record",
-  MEDICINE_DETAIL: "/medicine/:id",
+  MEDICINE_DETAIL: "/medicine",
+  SINGLE_MEDICINE: "/medicine/single/:id",
 };
