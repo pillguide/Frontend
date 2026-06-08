@@ -13,7 +13,7 @@ export default function MedicineDetailPage() {
     <MobileLayout>
       <PageHeader title="약 정보" />
 
-      <div className="min-h-screen bg-slate-50 px-5 pt-6 pb-24">
+      <div className="bg-slate-50 px-5 pt-6 pb-10">
         {/* Gallery */}
         <div className="rounded-[28px] bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <div className="grid grid-cols-3 gap-3">
@@ -22,7 +22,7 @@ export default function MedicineDetailPage() {
                 key={index}
                 src={image}
                 alt={`medicine-${index}`}
-                className="h-24 w-full rounded-2xl object-cover"
+                className="h-24 w-full rounded-2xl object-contain"
               />
             ))}
           </div>

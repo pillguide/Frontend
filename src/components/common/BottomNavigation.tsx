@@ -11,7 +11,8 @@ const navItems = [
 
 export default function BottomNavigation() {
   return (
-    <nav className="absolute bottom-0 left-0 right-0 border-t border-slate-200 bg-white">
+    // BottomNavigation.tsx
+<nav className="border-t border-slate-200 bg-white flex-shrink-0">
       <div className="flex h-16 items-center justify-around px-4">
         {navItems.map(({ to, icon: Icon, center, label }) => (
           <NavLink

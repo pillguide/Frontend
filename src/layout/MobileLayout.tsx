@@ -9,6 +9,8 @@ interface MobileLayoutProps {
   showBottomNav?: boolean;
 }
 
+// src/layout/MobileLayout.tsx
+
 export default function MobileLayout({
   children,
   showBottomNav = true,
@@ -16,8 +18,10 @@ export default function MobileLayout({
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-[#f7f8fb] flex justify-center">
-      <div className="relative w-full max-w-[420px] min-h-screen bg-slate-50 shadow-sm overflow-hidden">
+    // min-h-screen → h-screen 으로 변경
+    <div className="h-screen bg-[#f7f8fb] flex justify-center">
+      {/* min-h-screen → h-full, overflow-hidden 유지 */}
+      <div className="relative w-full max-w-[420px] h-full bg-slate-50 shadow-sm flex flex-col overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.main
             key={location.pathname}
@@ -25,7 +29,8 @@ export default function MobileLayout({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className={showBottomNav ? "pb-24" : ""}
+            // flex-1 + overflow-y-auto 추가, pb-24 제거
+            className="flex-1 overflow-y-auto"
           >
             {children}
           </motion.main>
