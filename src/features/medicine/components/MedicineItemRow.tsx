@@ -17,7 +17,7 @@ export default function MedicineItemRow({ medicine, onClick }: MedicineItemRowPr
         <img
           src={medicine.imageUrl}
           alt={medicine.name}
-          className="h-12 w-12 rounded-full object-cover"
+          className="h-12 w-12 object-contain"
         />
         <div>
           {medicine.warning && (

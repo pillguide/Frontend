@@ -13,7 +13,7 @@ export default function MedicineHero({ name, imageUrl, tags }: MedicineHeroProps
       <img
         src={imageUrl}
         alt={name}
-        className="mb-4 h-20 w-20 rounded-full bg-slate-100 object-cover"
+        className="mb-4 h-28 w-28 object-contain"
       />
       <h2 className="mb-3 text-xl font-bold text-slate-900">{name}</h2>
       <div className="flex gap-2">
