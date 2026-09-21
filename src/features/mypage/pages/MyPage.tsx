@@ -4,9 +4,18 @@ import MobileLayout from "../../../layout/MobileLayout";
 import { myPageMockData } from "../mock/mypage.mock";
 import QuickActionButtons from "../components/QuickActionButtons";
 import MenuList from "../components/MenuList";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../constants/routes";
+import { authStorage } from "../../../utils/authStorage";
 
 export default function MyPage() {
   const data = myPageMockData;
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    authStorage.clear();
+    navigate(ROUTES.LOGIN, { replace: true });
+  };
 
   return (
     <MobileLayout>
@@ -32,7 +41,7 @@ export default function MyPage() {
 
         {/* Logout button - centered, narrower */}
         <div className="mt-8 flex justify-center">
-          <button className="rounded-full border border-red-300 px-12 py-2.5 text-sm font-medium text-red-400 hover:bg-red-50">
+          <button onClick={handleLogout} className="rounded-full border border-red-300 px-12 py-2.5 text-sm font-medium text-red-400 hover:bg-red-50">
             로그아웃
           </button>
         </div>

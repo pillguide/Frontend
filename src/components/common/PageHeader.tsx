@@ -8,6 +8,8 @@ interface PageHeaderProps {
   showBack?: boolean;
   onBack?: () => void;
   rightAction?: ReactNode;
+  /** 뒤로가기 버튼 대신 넣을 왼쪽 요소 (예: 닫기 X 버튼, 취소 텍스트) */
+  leftAction?: ReactNode;
 }
 
 export default function PageHeader({
@@ -15,13 +17,15 @@ export default function PageHeader({
   showBack = true,
   onBack,
   rightAction,
+  leftAction,
 }: PageHeaderProps) {
   const navigate = useNavigate();
   const handleBack = onBack ?? (() => navigate(-1));
 
   return (
     <header className="sticky top-0 z-10 flex items-center justify-center border-b border-slate-100 bg-white px-4 py-4">
-      {showBack && (
+      {leftAction && <div className="absolute left-3">{leftAction}</div>}
+      {!leftAction && showBack && (
         <button
           onClick={handleBack}
           className="absolute left-3 p-2"
