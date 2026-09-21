@@ -13,6 +13,11 @@ import ScanRecordPage from "./features/medicine/pages/ScanRecordPage";
 import MedicineDetailPage from "./features/medicine/pages/MedicineDetailPage";
 import SingleMedicineDetailPage from "./features/medicine/pages/SingleMedicineDetailPage";
 import { AlarmProvider } from "./features/alarm/context/AlarmContext";
+import { UserProvider } from "./features/user/context/UserContext";
+import { IntakeProvider } from "./features/intake/context/IntakeContext";
+import ProfilePage from "./features/user/pages/ProfilePage";
+import CheckRecordPage from "./features/intake/pages/CheckRecordPage";
+import SearchPage from "./features/search/pages/SearchPage";
 import AlarmListPage from "./features/alarm/pages/AlarmListPage";
 import AlarmFormPage from "./features/alarm/pages/AlarmFormPage";
 
@@ -26,7 +31,9 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <UserProvider>
       <AlarmProvider>
+      <IntakeProvider>
         <Routes>
           {/* 인증 */}
           <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -35,7 +42,10 @@ export default function App() {
 
           {/* 메인 */}
           <Route path={ROUTES.HOME} element={<HomePage />} />
+          <Route path={ROUTES.SEARCH} element={<SearchPage />} />
           <Route path={ROUTES.MY_PAGE} element={<MyPage />} />
+          <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+          <Route path={ROUTES.CHECK_RECORD} element={<CheckRecordPage />} />
           <Route path={ROUTES.SCAN} element={<ScanPage />} />
           <Route path={ROUTES.SCAN_RECORD} element={<ScanRecordPage />} />
           <Route path="/medicine/:id" element={<MedicineDetailPage />} />
@@ -46,7 +56,9 @@ export default function App() {
           <Route path={ROUTES.ALARM_NEW} element={<AlarmFormPage />} />
           <Route path={ROUTES.ALARM_EDIT} element={<AlarmFormPage />} />
         </Routes>
+      </IntakeProvider>
       </AlarmProvider>
+      </UserProvider>
     </BrowserRouter>
   );
 }

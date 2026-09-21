@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 한국어 줄바꿈을 단어 단위로 */
+@layer base {
+  body { word-break: keep-all; overflow-wrap: break-word; }
+}
+
 :root { font-size: 16px; }
 :root[data-font-scale="xs"] { font-size: 14px; }
 :root[data-font-scale="sm"] { font-size: 15px; }

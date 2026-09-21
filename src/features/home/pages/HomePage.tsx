@@ -1,48 +1,56 @@
 // src/features/home/pages/HomePage.tsx
-import { ChevronRight, ScanLine } from "lucide-react";
-import MobileLayout from "../../../layout/MobileLayout";
-import HomeGreeting from "../components/HomeGreeting";
-import TodayProgressCard from "../components/TodayProgressCard";
-import NextMedicationCard from "../components/NextMedicationCard";
-import MedicationChecklist from "../components/MedicationChecklist";
-import { useHomeData } from "../hooks/useHomeData";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import MobileLayout from "../../../layout/MobileLayout";
+import { ROUTES, alarmEditPath } from "../../../constants/routes";
+import { useUser } from "../../user/context/UserContext";
+import { useIntake } from "../../intake/context/IntakeContext";
+import { useDoses, useStreak } from "../../intake/hooks/useIntakeStats";
+import { useNow } from "../hooks/useNow";
+import HomeGreeting from "../components/HomeGreeting";
+import TodayHeroCard from "../components/TodayHeroCard";
+import NextDoseCard from "../components/NextDoseCard";
+import QuickMenu from "../components/QuickMenu";
+import MedicationChecklist from "../components/MedicationChecklist";
+import HealthTipCard from "../components/HealthTipCard";
 
 export default function HomePage() {
-  const { data, isLoading } = useHomeData();
   const navigate = useNavigate();
+  const now = useNow();
+  const { profile } = useUser();
+  const { toggleTaken } = useIntake();
+  const { doses, total, taken } = useDoses(now);
+  const streak = useStreak();
 
-  if (isLoading || !data) {
-    return (
-      <MobileLayout>
-        <div className="p-6 text-slate-500">홈 데이터를 불러오는 중...</div>
-      </MobileLayout>
-    );
-  }
+  const openAlarm = (alarmId: number) => navigate(alarmEditPath(alarmId));
 
-  const completed = data.todayMedications.filter(m => m.taken).length;
-  const total = data.todayMedications.length;
+  const handleToggle = (alarmId: number) => {
+    const nowTaken = toggleTaken(now, alarmId);
+    if (!nowTaken) return;
+    const remain = total - taken - 1;
+    toast.success(remain === 0 ? "오늘 약을 모두 챙겼어요!" : `복용 완료! ${remain}개 남았어요`);
+  };
 
   return (
     <MobileLayout>
-      <HomeGreeting userName={data.userName} />
-      
-      <div className="space-y-3 px-4 pb-6">
-        <TodayProgressCard total={total} completed={completed} />
-        <NextMedicationCard next={data.nextMedication} />
-        <MedicationChecklist medications={data.todayMedications} />
-        
-        {/* 스캔 진입점 - 한 줄짜리로 단순화 */}
-        <button
-          onClick={() => navigate("/scan")}
-          className="mt-3 flex w-full items-center gap-2.5 rounded-xl bg-white p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
-        >
-          <ScanLine size={20} className="text-slate-700" />
-          <span className="flex-1 text-left text-sm font-medium text-slate-900">
-            약 스캔하기
-          </span>
-          <ChevronRight size={18} className="text-slate-400" />
-        </button>
+      <div className="bg-gradient-to-b from-primary-50/70 to-transparent">
+        <HomeGreeting userName={profile.name} now={now} />
+        <div className="px-4">
+          <TodayHeroCard total={total} taken={taken} streak={streak} onClick={() => navigate(ROUTES.CHECK_RECORD)} />
+        </div>
+      </div>
+
+      <div className="space-y-5 px-4 pb-8 pt-4">
+        <NextDoseCard doses={doses} now={now} onOpen={openAlarm} />
+        <QuickMenu />
+        <MedicationChecklist
+          doses={doses}
+          onToggle={handleToggle}
+          onOpen={openAlarm}
+          onManage={() => navigate(ROUTES.ALARM)}
+          onAdd={() => navigate(ROUTES.ALARM_NEW)}
+        />
+        <HealthTipCard date={now} />
       </div>
     </MobileLayout>
   );

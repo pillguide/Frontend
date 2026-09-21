@@ -2,7 +2,7 @@
 // 복약 알람 추가(/mypage/alarm/new) · 편집(/mypage/alarm/:id) 공용 페이지
 import { useState } from "react";
 import { Check, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
@@ -25,7 +25,7 @@ const emptyDraft: AlarmDraft = {
   dosage: "",
   hour: 8,
   minute: 0,
-  repeatDays: [],
+  repeatDays: [0, 1, 2, 3, 4, 5, 6],
   memo: "",
   snoozeEnabled: true,
   snoozeMinutes: 9,
@@ -50,20 +50,22 @@ export default function AlarmFormPage() {
   const { id } = useParams();
   const { getAlarm } = useAlarms();
   const alarm = id ? getAlarm(Number(id)) : undefined;
+  const [searchParams] = useSearchParams();
+  const presetName = searchParams.get("name") ?? "";
 
   // 잘못된 id로 들어오면 목록으로
   if (id && !alarm) return <Navigate to={ROUTES.ALARM} replace />;
 
   // key로 대상이 바뀔 때 폼 상태 초기화
-  return <AlarmForm key={id ?? "new"} alarm={alarm} />;
+  return <AlarmForm key={id ?? "new"} alarm={alarm} presetName={presetName} />;
 }
 
-function AlarmForm({ alarm }: { alarm?: Alarm }) {
+function AlarmForm({ alarm, presetName = "" }: { alarm?: Alarm; presetName?: string }) {
   const navigate = useNavigate();
   const { addAlarm, updateAlarm, removeAlarms } = useAlarms();
   const isEdit = !!alarm;
 
-  const [draft, setDraft] = useState<AlarmDraft>(alarm ? toDraft(alarm) : emptyDraft);
+  const [draft, setDraft] = useState<AlarmDraft>(alarm ? toDraft(alarm) : { ...emptyDraft, medicineName: presetName });
   const [view, setView] = useState<"form" | "repeat">("form");
   const [snoozePickerOpen, setSnoozePickerOpen] = useState(false);
 
