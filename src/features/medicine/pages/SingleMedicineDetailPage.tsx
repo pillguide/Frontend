@@ -8,6 +8,7 @@ import MedicineHero from "../components/MedicineHero";
 import { getSingleMedicine } from "../mock/medicine.mock";
 import type { SingleMedicineDetail } from "../types/medicine";
 import PageHeader from "../../../components/common/PageHeader";
+import { ROUTES } from "../../../constants/routes";
 
 
 export default function SingleMedicineDetailPage() {
@@ -49,7 +50,7 @@ export default function SingleMedicineDetailPage() {
 
         {/* Primary CTA */}
         <button
-          onClick={() => navigate(`/mypage/alarm?medicineId=${data.id}`)}
+          onClick={() => navigate(`${ROUTES.ALARM_NEW}?name=${encodeURIComponent(data.name)}`)}
           className="mb-4 flex h-12 w-full items-center justify-center gap-1 rounded-xl bg-[#534AB7] font-medium text-white"
         >
           <Bell size={18} />

@@ -4,6 +4,7 @@ import type { OnboardingForm } from "../types/onboarding";
 import { ChevronLeft } from "lucide-react";
 import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES } from "../../../constants/routes";
+import { useUser } from "../../user/context/UserContext";
 import maleIcon from "../../../assets/남자.png";
 import femaleIcon from "../../../assets/여자.png";
 import { fontScaleStorage, type FontScale } from "../../../utils/fontScale";
@@ -17,6 +18,7 @@ const fontLabels = ["최대 작게", "조금 작게", "중간", "조금 크게",
 
 export default function ProfileOnboardingPage() {
   const navigate = useNavigate();
+  const { updateProfile } = useUser();
 
   const [step, setStep] = useState<Step>("NAME");
   const [form, setForm] = useState<OnboardingForm>({
@@ -196,7 +198,10 @@ export default function ProfileOnboardingPage() {
             {/*  홈으로 */}
             <button
               type="button"
-              onClick={() => navigate(ROUTES.HOME, { replace: true })}
+              onClick={() => {
+                updateProfile({ ...form, name: form.name.trim(), email: form.email.trim() });
+                navigate(ROUTES.HOME, { replace: true });
+              }}
               className="mt-6 w-full h-14 rounded-2xl bg-primary text-white font-semibold"
             >
               시작하기
