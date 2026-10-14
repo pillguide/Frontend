@@ -11,4 +11,6 @@ Vercel's Git integration deploys `main` to Production and other branches/PRs to 
 
 `/api/*`, `/oauth2/*`, and `/login/oauth2/*` pass through Vercel to Cloudflare, then the matching EC2/k3s namespace. Other paths use the SPA fallback. API responses are not cached. Keep `VITE_API_URL` and `VITE_API_BASE_URL` unset in Vercel so browser requests stay same-origin instead of bypassing the proxy.
 
+API responses include `X-PillGuide-Environment` for checking the deployment's selected environment. Preview URLs require Vercel authentication: a redirected HTTP 200 with title `Login – Vercel` is the protection page, not an application response. Verify with an authenticated browser or `vercel curl`; do not disable deployment protection.
+
 Backend CI maps Backend `develop` to `manifest/main:dev/deployment.yaml` and Backend `main` to `manifest/main:production/deployment.yaml`. Spring activation is a separate step; API 503 responses are expected while the Deployment has zero replicas. Preview OAuth requires an allowed callback URL before real login can work.
