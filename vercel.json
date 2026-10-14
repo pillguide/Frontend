@@ -1,5 +1,15 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://api.pillguide.site/api/:path*" },
+    { "source": "/oauth2/:path*", "destination": "https://api.pillguide.site/oauth2/:path*" },
+    { "source": "/login/oauth2/:path*", "destination": "https://api.pillguide.site/login/oauth2/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    { "source": "/api/:path*", "headers": [{ "key": "Cache-Control", "value": "no-store" }, { "key": "x-vercel-enable-rewrite-caching", "value": "0" }] },
+    { "source": "/oauth2/:path*", "headers": [{ "key": "Cache-Control", "value": "no-store" }, { "key": "x-vercel-enable-rewrite-caching", "value": "0" }] },
+    { "source": "/login/oauth2/:path*", "headers": [{ "key": "Cache-Control", "value": "no-store" }, { "key": "x-vercel-enable-rewrite-caching", "value": "0" }] }
   ]
 }

@@ -16,7 +16,7 @@ export async function scanPills(imageFile: File): Promise<Pill[]> {
   // 진짜 백엔드 연결 (지금은 잠들어 있음)
   const formData = new FormData();
   formData.append("image", imageFile);
-  const res = await fetch(import.meta.env.VITE_API_URL + "/api/scan", {
+  const res = await fetch((import.meta.env.VITE_API_URL ?? "") + "/api/scan", {
     method: "POST",
     body: formData,
   });

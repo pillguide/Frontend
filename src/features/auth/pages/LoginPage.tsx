@@ -7,7 +7,7 @@ import kakaoIcon from "../../../assets/카카오톡로고.png";
 import naverIcon from "../../../assets/네이버로고.png";
 import googleIcon from "../../../assets/구글.svg";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8080");
 
 type Provider = "kakao" | "naver" | "google";
 
