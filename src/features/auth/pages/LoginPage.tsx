@@ -28,7 +28,7 @@ export default function LoginPage() {
   const error = searchParams.get("error");
 
   const moveToOAuth = (provider: Provider) => {
-    window.location.assign(`${API_BASE_URL}/oauth2/authorization/${provider}`);
+    window.location.assign(`${API_BASE_URL}/api/v1/oauth2/authorize/${provider}`);
   };
 
   return (
