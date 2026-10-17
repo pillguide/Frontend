@@ -9,6 +9,7 @@ const apiPaths = ['/api/:path*', '/oauth2/:path*', '/login/oauth2/:path*'];
 
 export const config: VercelConfig = {
   framework: 'vite',
+  buildCommand: 'npm run verify',
   rewrites: [
     ...apiPaths.map((source) => ({ source, destination: `${apiOrigin}${source}` })),
     { source: '/(.*)', destination: '/index.html' },
