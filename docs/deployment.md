@@ -13,4 +13,8 @@ Vercel's Git integration deploys `main` to Production and other branches/PRs to 
 
 API responses include `X-PillGuide-Environment` for checking the deployment's selected environment. Preview URLs require Vercel authentication: a redirected HTTP 200 with title `Login – Vercel` is the protection page, not an application response. Verify with an authenticated browser or `vercel curl`; do not disable deployment protection.
 
-Backend CI maps Backend `develop` to `manifest/main:dev/deployment.yaml` and Backend `main` to `manifest/main:production/deployment.yaml`. Spring activation is a separate step; API 503 responses are expected while the Deployment has zero replicas. Preview OAuth requires an allowed callback URL before real login can work.
+Backend CI maps Backend `develop` to `manifest/main:dev/deployment.yaml` and Backend `main` to `manifest/main:production/deployment.yaml`. Each environment currently runs one Backend replica; brief API unavailability during replacement is accepted. Preview OAuth requires an allowed callback URL before real login can work.
+
+## Build checks
+
+Use Node.js 24 and run `npm ci`, then `npm run verify`. Verification runs ESLint, dependency-free Node tests for environment routing and proxy response headers, then the existing TypeScript/Vite build. `vercel.ts` sets the same command for Vercel builds, so a failed check stops that deployment. Push deployment behavior and branch targets remain unchanged; no manual approval is required.
