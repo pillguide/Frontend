@@ -20,6 +20,13 @@ import CheckRecordPage from "./features/intake/pages/CheckRecordPage";
 import SearchPage from "./features/search/pages/SearchPage";
 import AlarmListPage from "./features/alarm/pages/AlarmListPage";
 import AlarmFormPage from "./features/alarm/pages/AlarmFormPage";
+import { usePushSync } from "./features/alarm/hooks/usePushNotifications";
+
+// 알림이 허용된 기기면 FCM 토큰을 계정에 등록하고, 앱 사용 중 온 푸시를 토스트로 보여준다
+function PushSync() {
+  usePushSync();
+  return null;
+}
 
 export default function App() {
   const [fontScale] = useState<FontScale>(() => fontScaleStorage.get());
@@ -34,6 +41,7 @@ export default function App() {
       <UserProvider>
       <AlarmProvider>
       <IntakeProvider>
+        <PushSync />
         <Routes>
           {/* 인증 */}
           <Route path={ROUTES.LOGIN} element={<LoginPage />} />

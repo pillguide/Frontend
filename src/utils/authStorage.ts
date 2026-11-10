@@ -11,4 +11,6 @@ export const authStorage = {
     localStorage.removeItem(REFRESH_KEY);
   },
   getAccessToken: () => localStorage.getItem(ACCESS_KEY),
+  getRefreshToken: () => localStorage.getItem(REFRESH_KEY),
+  isLoggedIn: () => Boolean(localStorage.getItem(ACCESS_KEY)),
 };

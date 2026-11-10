@@ -8,10 +8,11 @@ import PageHeader from "../../../components/common/PageHeader";
 import { ROUTES, alarmEditPath } from "../../../constants/routes";
 import { useAlarms } from "../context/AlarmContext";
 import AlarmCard from "../components/AlarmCard";
+import PushPermissionCard from "../components/PushPermissionCard";
 
 export default function AlarmListPage() {
   const navigate = useNavigate();
-  const { alarms, toggleAlarm, removeAlarms } = useAlarms();
+  const { alarms, source, loading, error, reload, toggleAlarm, removeAlarms } = useAlarms();
   const [editMode, setEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -25,11 +26,19 @@ export default function AlarmListPage() {
   const toggleSelect = (id: number) =>
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedIds.length === 0) return;
-    removeAlarms(selectedIds);
-    toast.success(`알람 ${selectedIds.length}개를 삭제했어요`);
-    exitEditMode();
+    try {
+      await removeAlarms(selectedIds);
+      toast.success(`알람 ${selectedIds.length}개를 삭제했어요`);
+      exitEditMode();
+    } catch {
+      toast.error("알람을 삭제하지 못했어요");
+    }
+  };
+
+  const handleToggle = (id: number) => {
+    toggleAlarm(id).catch(() => toast.error("알람 상태를 바꾸지 못했어요"));
   };
 
   return (
@@ -80,7 +89,29 @@ export default function AlarmListPage() {
       </div>
 
       <div className="px-5 pb-10">
-        {isEmpty ? (
+        <div className="mb-4">
+          <PushPermissionCard source={source} />
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-[84px] animate-pulse rounded-[20px] bg-white/70" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="mt-20 flex flex-col items-center text-center">
+            <p className="text-base font-medium text-slate-700">알람을 불러오지 못했어요</p>
+            <p className="mt-1 text-sm text-slate-500">{error}</p>
+            <button
+              type="button"
+              onClick={reload}
+              className="mt-6 rounded-full border border-primary bg-white px-6 py-2.5 text-sm font-medium text-primary"
+            >
+              다시 시도
+            </button>
+          </div>
+        ) : isEmpty ? (
           <div className="mt-24 flex flex-col items-center text-center">
             <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <BellOff size={30} className="text-slate-400" />
@@ -104,7 +135,7 @@ export default function AlarmListPage() {
                 editMode={editMode}
                 selected={selectedIds.includes(alarm.id)}
                 onSelect={() => toggleSelect(alarm.id)}
-                onToggle={() => toggleAlarm(alarm.id)}
+                onToggle={() => handleToggle(alarm.id)}
                 onOpen={() => navigate(alarmEditPath(alarm.id))}
               />
             ))}
