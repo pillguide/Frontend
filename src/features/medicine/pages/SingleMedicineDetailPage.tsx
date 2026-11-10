@@ -9,22 +9,58 @@ import { getSingleMedicine } from "../mock/medicine.mock";
 import type { SingleMedicineDetail } from "../types/medicine";
 import PageHeader from "../../../components/common/PageHeader";
 import { ROUTES } from "../../../constants/routes";
+import { drugApi } from "../api/drugApi";
+import { toTextItems } from "../utils/drugText";
 
+/** 서버 약 상세 → 화면 모델 */
+async function loadFromApi(id: number): Promise<SingleMedicineDetail> {
+  const d = await drugApi.detail(id);
+  return {
+    id: d.drugId,
+    name: d.name,
+    imageUrl: d.imageUrl,
+    tags: [],
+    effects: toTextItems(d.effect),
+    sideEffects: toTextItems(d.sideEffects),
+    usage: toTextItems(d.dosageMethod),
+    storage: toTextItems(d.storageMethod),
+  };
+}
 
-export default function SingleMedicineDetailPage() {
+interface Props {
+  /** "mock": 스캔 결과 데모 화면에서 들어온 경우 (AI 연동 전) */
+  source?: "api" | "mock";
+}
+
+export default function SingleMedicineDetailPage({ source = "api" }: Props) {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [data, setData] = useState<SingleMedicineDetail | null>(null);
+  const [state, setState] = useState<{ id?: string; data?: SingleMedicineDetail; error?: string }>({});
 
   useEffect(() => {
     if (!id) return;
-    getSingleMedicine(Number(id)).then(setData);
-  }, [id]);
+    let cancelled = false;
+    const load = source === "mock" ? getSingleMedicine(Number(id)) : loadFromApi(Number(id));
+    load
+      .then((data) => {
+        if (!cancelled) setState({ id, data });
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setState({ id, error: e instanceof Error ? e.message : "약 정보를 불러오지 못했어요" });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, source]);
+
+  const data = state.id === id ? state.data : undefined;
+  const error = state.id === id ? state.error : undefined;
 
   if (!data) {
     return (
       <MobileLayout>
-        <div className="p-6 text-slate-500">불러오는 중...</div>
+        <PageHeader title="약 정보" showBack={true} />
+        <div className="p-6 text-center text-slate-500">{error ?? "불러오는 중..."}</div>
       </MobileLayout>
     );
   }
@@ -33,7 +69,8 @@ export default function SingleMedicineDetailPage() {
     { value: "side-effects", title: "부작용", items: data.sideEffects },
     { value: "usage", title: "복용 방법", items: data.usage },
     { value: "storage", title: "보관 방법", items: data.storage },
-  ];
+  ].filter((section) => section.items.length > 0);
+  const empty = <li className="text-slate-400">등록된 정보가 없어요</li>;
 
   return (
     <MobileLayout>
@@ -61,9 +98,9 @@ export default function SingleMedicineDetailPage() {
         <div className="mb-3 rounded-xl bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
           <h3 className="mb-3 text-base font-bold text-slate-900">주요 효능</h3>
           <ul className="space-y-2 text-sm text-slate-700">
-            {data.effects.map((item, idx) => (
-              <li key={idx}>• {item}</li>
-            ))}
+            {data.effects.length === 0
+              ? empty
+              : data.effects.map((item, idx) => <li key={idx}>• {item}</li>)}
           </ul>
         </div>
 

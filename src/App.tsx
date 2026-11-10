@@ -10,7 +10,8 @@ import HomePage from "./features/home/pages/HomePage";
 import MyPage from "./features/mypage/pages/MyPage";
 import ScanPage from "./features/medicine/pages/ScanPage";
 import ScanRecordPage from "./features/medicine/pages/ScanRecordPage";
-import MedicineDetailPage from "./features/medicine/pages/MedicineDetailPage";
+import ScanResultPage from "./features/medicine/pages/ScanResultPage";
+import ScanSessionPage from "./features/medicine/pages/ScanSessionPage";
 import SingleMedicineDetailPage from "./features/medicine/pages/SingleMedicineDetailPage";
 import { AlarmProvider } from "./features/alarm/context/AlarmContext";
 import { UserProvider } from "./features/user/context/UserContext";
@@ -56,7 +57,9 @@ export default function App() {
           <Route path={ROUTES.CHECK_RECORD} element={<CheckRecordPage />} />
           <Route path={ROUTES.SCAN} element={<ScanPage />} />
           <Route path={ROUTES.SCAN_RECORD} element={<ScanRecordPage />} />
-          <Route path="/medicine/:id" element={<MedicineDetailPage />} />
+          <Route path={ROUTES.SCAN_RESULT} element={<ScanResultPage />} />
+          <Route path={ROUTES.SCAN_RESULT_MEDICINE} element={<SingleMedicineDetailPage source="mock" />} />
+          <Route path="/medicine/:id" element={<ScanSessionPage />} />
           <Route path={ROUTES.SINGLE_MEDICINE} element={<SingleMedicineDetailPage />} />
 
           {/* 복약 알람 */}

@@ -1,17 +1,18 @@
-// src/features/medicine/pages/MedicineDetailPage.tsx
+// src/features/medicine/pages/ScanResultPage.tsx
+// 스캔 직후 결과 화면 (데모). AI 서버 연동 전까지 mock 결과를 보여준다.
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
 import { medicineDetailMock } from "../mock/medicine.mock";
 import MedicineItemRow from "../components/MedicineItemRow";
 import PageHeader from "../../../components/common/PageHeader";
 
-export default function MedicineDetailPage() {
+export default function ScanResultPage() {
   const navigate = useNavigate();
   const data = medicineDetailMock;
 
   return (
     <MobileLayout>
-      <PageHeader title="약 정보" />
+      <PageHeader title="스캔 결과" />
 
       <div className="bg-slate-50 px-5 pt-6 pb-10">
         {/* Gallery */}
@@ -53,7 +54,7 @@ export default function MedicineDetailPage() {
               <MedicineItemRow
                 key={medicine.id}
                 medicine={medicine}
-                onClick={() => navigate(`/medicine/single/${medicine.id}`)}
+                onClick={() => navigate(`/scan/result/medicine/${medicine.id}`)}
               />
             ))}
           </div>

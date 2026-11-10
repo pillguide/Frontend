@@ -1,5 +1,5 @@
 // src/features/medicine/components/MedicineItemRow.tsx
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Pill } from "lucide-react";
 import type { MedicineItem } from "../types/medicine";
 
 interface MedicineItemRowProps {
@@ -14,11 +14,13 @@ export default function MedicineItemRow({ medicine, onClick }: MedicineItemRowPr
       className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
     >
       <div className="flex items-center gap-3">
-        <img
-          src={medicine.imageUrl}
-          alt={medicine.name}
-          className="h-12 w-12 object-contain"
-        />
+        {medicine.imageUrl ? (
+          <img src={medicine.imageUrl} alt={medicine.name} className="h-12 w-12 object-contain" />
+        ) : (
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50">
+            <Pill size={22} className="text-slate-300" />
+          </span>
+        )}
         <div>
           {medicine.warning && (
             <span className="inline-block rounded-full border border-red-300 px-3 py-1 text-xs text-red-500">
