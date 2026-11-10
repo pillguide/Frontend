@@ -11,14 +11,7 @@ import { useAlarms } from "../context/AlarmContext";
 import type { Alarm, AlarmDraft } from "../types/alarm";
 import { formatRepeatDays } from "../utils/alarmFormat";
 import TimePicker from "../components/TimePicker";
-import Toggle from "../components/Toggle";
-import WheelPicker, { type WheelOption } from "../components/WheelPicker";
 import RepeatSelector from "../components/RepeatSelector";
-
-const snoozeOptions: WheelOption<number>[] = Array.from({ length: 30 }, (_, i) => ({
-  value: i + 1,
-  label: `${i + 1}분`,
-}));
 
 const emptyDraft: AlarmDraft = {
   medicineName: "",
@@ -27,8 +20,6 @@ const emptyDraft: AlarmDraft = {
   minute: 0,
   repeatDays: [0, 1, 2, 3, 4, 5, 6],
   memo: "",
-  snoozeEnabled: true,
-  snoozeMinutes: 9,
 };
 
 function toDraft(alarm: Alarm): AlarmDraft {
@@ -39,8 +30,6 @@ function toDraft(alarm: Alarm): AlarmDraft {
     minute: alarm.minute,
     repeatDays: alarm.repeatDays,
     memo: alarm.memo,
-    snoozeEnabled: alarm.snoozeEnabled,
-    snoozeMinutes: alarm.snoozeMinutes,
   };
 }
 
@@ -67,35 +56,50 @@ function AlarmForm({ alarm, presetName = "" }: { alarm?: Alarm; presetName?: str
 
   const [draft, setDraft] = useState<AlarmDraft>(alarm ? toDraft(alarm) : { ...emptyDraft, medicineName: presetName });
   const [view, setView] = useState<"form" | "repeat">("form");
-  const [snoozePickerOpen, setSnoozePickerOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const set = <K extends keyof AlarmDraft>(key: K, value: AlarmDraft[K]) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
 
-  const canSave = draft.medicineName.trim().length > 0;
+  const canSave = draft.medicineName.trim().length > 0 && (draft.dosage ?? "").trim().length > 0 && !saving;
 
-  const handleSave = () => {
-    if (!canSave) {
+  const handleSave = async () => {
+    if (saving) return;
+    if (!draft.medicineName.trim()) {
       toast.error("약 이름을 입력해 주세요");
+      return;
+    }
+    if (!draft.dosage?.trim()) {
+      toast.error("복용량을 입력해 주세요");
       return;
     }
     const payload: AlarmDraft = {
       ...draft,
       medicineName: draft.medicineName.trim(),
-      dosage: draft.dosage?.trim() || undefined,
+      dosage: draft.dosage.trim(),
       memo: draft.memo.trim(),
     };
-    if (alarm) updateAlarm(alarm.id, payload);
-    else addAlarm(payload);
-    toast.success(isEdit ? "알람을 수정했어요" : "알람을 추가했어요");
-    navigate(ROUTES.ALARM, { replace: true });
+    setSaving(true);
+    try {
+      if (alarm) await updateAlarm(alarm.id, payload);
+      else await addAlarm(payload);
+      toast.success(isEdit ? "알람을 수정했어요" : "알람을 추가했어요");
+      navigate(ROUTES.ALARM, { replace: true });
+    } catch {
+      toast.error("알람을 저장하지 못했어요. 잠시 후 다시 시도해 주세요");
+      setSaving(false);
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!alarm) return;
-    removeAlarms([alarm.id]);
-    toast.success("알람을 삭제했어요");
-    navigate(ROUTES.ALARM, { replace: true });
+    try {
+      await removeAlarms([alarm.id]);
+      toast.success("알람을 삭제했어요");
+      navigate(ROUTES.ALARM, { replace: true });
+    } catch {
+      toast.error("알람을 삭제하지 못했어요");
+    }
   };
 
   // 반복 요일 선택 화면
@@ -201,45 +205,6 @@ function AlarmForm({ alarm, presetName = "" }: { alarm?: Alarm; presetName?: str
               className="min-w-0 flex-1 bg-transparent text-right text-sm text-slate-700 outline-none placeholder:text-slate-300"
             />
           </label>
-
-          <div className="flex items-center justify-between px-5 py-4">
-            <span className="text-base text-slate-900">다시 알림</span>
-            <Toggle
-              checked={draft.snoozeEnabled}
-              onChange={(v) => {
-                set("snoozeEnabled", v);
-                if (!v) setSnoozePickerOpen(false);
-              }}
-              label="다시 알림"
-            />
-          </div>
-
-          {draft.snoozeEnabled && (
-            <div>
-              <button
-                type="button"
-                onClick={() => setSnoozePickerOpen((o) => !o)}
-                aria-expanded={snoozePickerOpen}
-                className="flex w-full items-center justify-between px-5 py-4 text-left"
-              >
-                <span className="text-base text-slate-900">다시 알림 연기 시간</span>
-                <span className={`text-sm ${snoozePickerOpen ? "font-semibold text-primary" : "text-slate-500"}`}>
-                  {draft.snoozeMinutes}분
-                </span>
-              </button>
-              {snoozePickerOpen && (
-                <div className="relative mx-4 mb-3">
-                  <div className="pointer-events-none absolute inset-x-0 top-1/2 h-10 -translate-y-1/2 rounded-xl bg-primary-50" />
-                  <WheelPicker
-                    ariaLabel="다시 알림 연기 시간"
-                    options={snoozeOptions}
-                    value={draft.snoozeMinutes}
-                    onChange={(m) => set("snoozeMinutes", m)}
-                  />
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {isEdit && (

@@ -6,14 +6,13 @@ export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Alarm {
   id: number;
   medicineName: string;
-  dosage?: string;        // "1알" 등, 없으면 표시 안 함
+  dosage?: string;        // "1알" 등 (서버 저장 시 필수)
   hour: number;           // 0~23
   minute: number;         // 0~59
-  repeatDays: Weekday[];  // 비어 있으면 반복 안 함
+  repeatDays: Weekday[];  // 비어 있으면 시작일 하루만
   memo: string;
-  snoozeEnabled: boolean; // 다시 알림
-  snoozeMinutes: number;  // 다시 알림 연기 시간(분)
-  enabled: boolean;       // 목록 토글
+  enabled: boolean;       // 목록 토글 (꺼도 복약 체크리스트는 유지)
+  startDate?: string;     // 서버 알림의 복약 시작일 (YYYY-MM-DD)
 }
 
-export type AlarmDraft = Omit<Alarm, "id" | "enabled">;
+export type AlarmDraft = Omit<Alarm, "id" | "enabled" | "startDate">;

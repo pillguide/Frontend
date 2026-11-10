@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES } from "../../../constants/routes";
 import { authStorage } from "../../../utils/authStorage";
+import { logout } from "../../auth/api/authApi";
 import { useUser } from "../../user/context/UserContext";
 import { myPageMockData } from "../mock/mypage.mock";
 import QuickActionButtons from "../components/QuickActionButtons";
@@ -15,7 +16,8 @@ export default function MyPage() {
   const navigate = useNavigate();
   const { profile } = useUser();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout(); // 서버에서 리프레시 토큰과 이 계정의 FCM 토큰을 해제 (실패해도 로컬 로그아웃은 진행)
     authStorage.clear();
     navigate(ROUTES.LOGIN, { replace: true });
   };
