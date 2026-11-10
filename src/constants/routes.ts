@@ -11,9 +11,14 @@ export const ROUTES = {
   ALARM_NEW: "/mypage/alarm/new",
   ALARM_EDIT: "/mypage/alarm/:id",
   SCAN: "/scan",
+  SCAN_RESULT: "/scan/result", // 스캔 결과 데모 (AI 연동 전 mock)
+  SCAN_RESULT_MEDICINE: "/scan/result/medicine/:id",
   SCAN_RECORD: "/scan-record",
   MEDICINE_DETAIL: "/medicine",
   SINGLE_MEDICINE: "/medicine/single/:id",
 };
+
+export const singleMedicinePath = (drugId: number) => `/medicine/single/${drugId}`;
+export const scanSessionPath = (sessionId: number) => `/medicine/${sessionId}`;
 
 export const alarmEditPath = (id: number) => `/mypage/alarm/${id}`;

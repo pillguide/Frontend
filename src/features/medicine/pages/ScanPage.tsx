@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
+import { ROUTES } from "../../../constants/routes";
 
 const TOTAL_MS = 6000;
 
@@ -55,7 +56,7 @@ export default function ScanPage() {
       if (intervalRef.current) clearInterval(intervalRef.current);
       setProgress(100);
       toast.success("분석이 완료됐어요!");
-      navigate("/medicine/1"); // 300ms 딜레이 제거하고 바로 이동
+      navigate(ROUTES.SCAN_RESULT); // 300ms 딜레이 제거하고 바로 이동
     }, TOTAL_MS);
   }
 

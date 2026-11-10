@@ -9,7 +9,7 @@ export interface ScanRecordItem {
 export interface MedicineItem {
   id: number;
   name: string;
-  imageUrl: string;
+  imageUrl: string | null;
   warning?: string;
 }
 
@@ -31,7 +31,7 @@ export interface MedicineTag {
 export interface SingleMedicineDetail {
   id: number;
   name: string;
-  imageUrl: string;
+  imageUrl: string | null;
   tags: MedicineTag[];
   effects: string[];        // 주요 효능 (항상 펼침)
   sideEffects: string[];    // 부작용
