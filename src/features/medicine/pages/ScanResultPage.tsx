@@ -13,13 +13,15 @@ import CombinationSummary from "../components/CombinationSummary";
 
 export default function ScanResultPage() {
   const navigate = useNavigate();
-  const { result, selected } = useScanDraft();
+  const { result, selected, preview } = useScanDraft();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const mounted = useRef(false);
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => {
+      mounted.current = false;
+    };
   }, []);
   async function save() {
     if (!result || !selected.length || busy) return;
@@ -40,9 +42,9 @@ export default function ScanResultPage() {
     }
   }
   return (
-    <MobileLayout>
+    <MobileLayout showBottomNav={false}>
       <PageHeader title="스캔 결과" />
-      <div className="space-y-4 bg-slate-50 px-5 pt-6 pb-10">
+      <div className="space-y-3 bg-[#f4f5f9] px-4 pt-4 pb-7">
         {!result ? (
           <p className="text-sm text-slate-500">
             현재 스캔 결과가 없어요.{" "}
@@ -55,26 +57,73 @@ export default function ScanResultPage() {
           </p>
         ) : (
           <>
-            <div className="rounded-[24px] bg-white p-5">
-              <h2 className="font-bold">검출 {result.drugCount}개</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                인식 결과는 참고용이며 정답을 보장하지 않아요. 모델 점수는 정답
-                확률이 아니에요.
-              </p>
-              {result.drugs.length === 0 && (
-                <p className="mt-3 text-sm">
-                  검출된 약이 없어요. 다시 촬영할 수 있어요.
-                </p>
+            <div className="rounded-[20px] bg-white p-3">
+              <div className="relative h-[200px] overflow-hidden rounded-[14px] bg-[#f4f5f9]">
+                {preview && (
+                  <img
+                    src={preview}
+                    alt="스캔한 사진"
+                    className="h-full w-full object-contain"
+                  />
+                )}
+                <span className="absolute left-2 top-2 rounded-full bg-slate-900/75 px-3 py-1 text-xs text-white">
+                  검출 {result.drugCount}개
+                </span>
+              </div>
+              <div className="flex items-center justify-between px-1 pt-3 text-xs">
+                <span className="text-slate-400">
+                  {result.scannedAt.replace("T", " ").slice(0, 16)} 분석
+                </span>
+                <button
+                  disabled={busy}
+                  className="font-bold text-primary disabled:opacity-40"
+                  onClick={() => {
+                    scanDraft.clear();
+                    navigate(ROUTES.SCAN);
+                  }}
+                >
+                  다시 찍기
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-1 pt-2">
+              <h2 className="font-bold text-slate-900">
+                인식된 약 {result.drugCount}개
+              </h2>
+              {result.drugs.some((d) => d.detectionId !== null) && (
+                <button
+                  disabled={busy}
+                  className="text-xs font-bold text-primary disabled:opacity-40"
+                  onClick={() =>
+                    scanDraft.setSelected(
+                      result.drugs.flatMap((d) =>
+                        d.detectionId === null ? [] : [d.detectionId],
+                      ),
+                    )
+                  }
+                >
+                  전체 선택
+                </button>
               )}
             </div>
+            <p className="px-1 text-xs text-slate-500">
+              인식 결과는 참고용이며 정답을 보장하지 않아요. 모델 점수는 정답
+              확률이 아니에요.
+            </p>
+            {result.drugs.length === 0 && (
+              <p className="rounded-2xl bg-white p-4 text-sm">
+                검출된 약이 없어요. 다시 촬영할 수 있어요.
+              </p>
+            )}
             {result.drugs.map((d, index) => (
               <div
                 key={d.detectionId ?? `legacy-${index}`}
-                className="rounded-2xl bg-white p-4"
+                className="rounded-2xl bg-white p-3"
               >
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
+                    className="mt-1 h-5 w-5 shrink-0 accent-primary"
                     aria-label={`${d.name} 검출 ${d.detectionIndex ?? index + 1} 선택`}
                     checked={
                       d.detectionId !== null && selected.includes(d.detectionId)
@@ -89,6 +138,21 @@ export default function ScanResultPage() {
                       );
                     }}
                   />
+                  <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-xl bg-[#f4f5f9]">
+                    {d.imageUrl && d.representativeImageStatus === "READY" ? (
+                      <img
+                        src={d.imageUrl}
+                        alt="데이터셋 대표 이미지"
+                        className="h-full w-full rounded-xl object-contain"
+                      />
+                    ) : (
+                      <span className="text-center text-[10px] text-slate-500">
+                        대표 이미지
+                        <br />
+                        준비 중
+                      </span>
+                    )}
+                  </div>
                   <div className="flex-1">
                     <p className="font-semibold">
                       검출 {d.detectionIndex ?? index + 1}: {d.name}
@@ -115,20 +179,9 @@ export default function ScanResultPage() {
                     </button>
                   </div>
                 </div>
-                {d.imageUrl && d.representativeImageStatus === "READY" ? (
-                  <img
-                    src={d.imageUrl}
-                    alt="데이터셋 대표 이미지"
-                    className="mt-3 h-24 object-contain"
-                  />
-                ) : (
-                  <p className="mt-3 text-sm text-slate-500">
-                    💊 대표 이미지 준비 중
-                  </p>
-                )}
               </div>
             ))}
-            <div className="rounded-[24px] bg-white p-5">
+            <div className="rounded-2xl bg-white p-4">
               <h2 className="mb-3 font-bold">사진 전체 병용 확인</h2>
               <CombinationSummary combination={result.combination} />
             </div>
