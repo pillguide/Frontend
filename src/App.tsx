@@ -85,7 +85,7 @@ function SessionApp() {
 
               {/* 메인 */}
               <Route path={ROUTES.HOME} element={<HomePage />} />
-              <Route path={ROUTES.SEARCH} element={<SearchPage />} />
+              <Route path={ROUTES.SEARCH} element={<Protected><SearchPage /></Protected>} />
               <Route path={ROUTES.MY_DRUGS} element={<MyDrugsPage />} />
               <Route path={ROUTES.MY_PAGE} element={<Protected><MyPage /></Protected>} />
               <Route path={ROUTES.PROFILE} element={<Protected><ProfilePage /></Protected>} />
@@ -95,12 +95,12 @@ function SessionApp() {
               <Route path={ROUTES.SCAN_RESULT} element={<ScanResultPage />} />
               <Route
                 path={ROUTES.SCAN_RESULT_MEDICINE}
-                element={<SingleMedicineDetailPage />}
+                element={<Protected><SingleMedicineDetailPage /></Protected>}
               />
               <Route path="/medicine/:id" element={<ScanSessionPage />} />
               <Route
                 path={ROUTES.SINGLE_MEDICINE}
-                element={<SingleMedicineDetailPage />}
+                element={<Protected><SingleMedicineDetailPage /></Protected>}
               />
 
               {/* 복약 알람 */}
