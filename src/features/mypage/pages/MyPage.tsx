@@ -1,6 +1,7 @@
 // src/features/mypage/pages/MyPage.tsx
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES } from "../../../constants/routes";
 import { authStorage } from "../../../utils/authStorage";
@@ -15,11 +16,22 @@ export default function MyPage() {
   const data = myPageMockData;
   const navigate = useNavigate();
   const { profile } = useUser();
+  const [logoutBusy, setLogoutBusy] = useState(false);
+  const [logoutError, setLogoutError] = useState(false);
 
   const handleLogout = async () => {
-    await logout(); // 서버에서 리프레시 토큰과 이 계정의 FCM 토큰을 해제 (실패해도 로컬 로그아웃은 진행)
-    authStorage.clear();
-    navigate(ROUTES.LOGIN, { replace: true });
+    if (logoutBusy) return;
+    setLogoutBusy(true);
+    setLogoutError(false);
+    try {
+      await logout();
+      authStorage.clear();
+      navigate(ROUTES.LOGIN, { replace: true });
+    } catch {
+      setLogoutError(true);
+    } finally {
+      setLogoutBusy(false);
+    }
   };
 
   return (
@@ -48,13 +60,15 @@ export default function MyPage() {
         <QuickActionButtons actions={data.quickActions} />
         <MenuList menus={data.menus} />
 
-        <div className="flex justify-center pt-2">
+        <div className="flex flex-col items-center gap-2 pt-2">
+          {logoutError && <p role="alert" className="text-sm text-red-500">로그아웃에 실패했어요. 다시 시도해 주세요.</p>}
           <button
             type="button"
             onClick={handleLogout}
+            disabled={logoutBusy}
             className="rounded-full border border-red-200 px-12 py-2.5 text-sm font-medium text-red-400 hover:bg-red-50"
           >
-            로그아웃
+            {logoutBusy ? "로그아웃 중..." : "로그아웃"}
           </button>
         </div>
       </div>
