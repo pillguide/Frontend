@@ -34,6 +34,18 @@ async function parseEnvelope<T>(res: Response): Promise<ApiEnvelope<T> | undefin
 }
 
 let reissuing: Promise<boolean> | null = null;
+let logoutPending = false;
+
+export async function withReissuePausedForLogout<T>(operation: () => Promise<T>): Promise<T> {
+  if (logoutPending) throw new Error("로그아웃이 이미 진행 중입니다.");
+  logoutPending = true;
+  try {
+    if (reissuing) await reissuing;
+    return await operation();
+  } finally {
+    logoutPending = false;
+  }
+}
 
 async function reissueTokens(): Promise<boolean> {
   const refreshToken = authStorage.getRefreshToken();
@@ -61,7 +73,7 @@ export async function apiRequest<T = void>(path: string, init: RequestInit = {},
   const res = await fetch(`${API_URL}${path}`, { ...init, headers });
 
   // access token 만료 → 한 번만 재발급 후 재시도 (동시 요청은 같은 재발급을 기다림)
-  if (res.status === 401 && retry && authStorage.getRefreshToken()) {
+  if (res.status === 401 && retry && !logoutPending && authStorage.getRefreshToken()) {
     reissuing ??= reissueTokens().finally(() => {
       reissuing = null;
     });
