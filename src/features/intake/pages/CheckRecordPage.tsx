@@ -8,25 +8,32 @@ import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
 import ProgressRing from "../../../components/ui/ProgressRing";
 import { ROUTES } from "../../../constants/routes";
+import { useNow } from "../../home/hooks/useNow";
 import { useIntake } from "../context/IntakeContext";
-import { useDoses, useStreak, useWeekStats } from "../hooks/useIntakeStats";
-import { WEEKDAY_SHORT, addDays, formatKoreanTime, formatMonthDay, formatWeekLabel, startOfDay, toDateKey } from "../utils/date";
+import { toScheduledDose, useHomeStats, useWeekStats, weekView } from "../hooks/useIntakeStats";
+import { WEEKDAY_SHORT, addDays, formatKoreanTime, formatMonthDay, formatWeekLabel, startOfDay, startOfWeek, toDateKey, koreaToday } from "../utils/date";
 import type { ScheduledDose } from "../utils/schedule";
 import WeekStrip from "../components/WeekStrip";
 import DoseCard from "../components/DoseCard";
 
 export default function CheckRecordPage() {
   const navigate = useNavigate();
-  const today = startOfDay(new Date());
+  const now = useNow();
+  const today = startOfDay(koreaToday(now));
   const [selected, setSelected] = useState<Date>(today);
-  const { toggleTaken } = useIntake();
+  const { toggleTaken, refresh } = useIntake();
 
-  const week = useWeekStats(selected);
-  const streak = useStreak();
-  const { doses, total, taken } = useDoses(selected);
+  const weekly = useWeekStats(selected);
+  const home = useHomeStats();
+  const week = weekly.data ? weekView(weekly.data) : { days: [], total: 0, taken: 0, rate: 0 };
+  const streak = home.data?.streak ?? 0;
+  const day = weekly.data?.days.find((d) => d.date === toDateKey(selected));
+  const doses = day?.doses.map(toScheduledDose) ?? [];
+  const total = day?.progress.total ?? 0;
+  const taken = day?.progress.taken ?? 0;
 
   const isToday = toDateKey(selected) === toDateKey(today);
-  const isFuture = selected > today;
+  const nextWeekAllowed = addDays(startOfWeek(selected), 13) <= addDays(today, 7);
   const isCurrentWeek = week.days.some((d) => toDateKey(d.date) === toDateKey(today));
 
   // 같은 시각끼리 묶기
@@ -38,10 +45,15 @@ export default function CheckRecordPage() {
     return acc;
   }, []);
 
-  const handleToggle = (alarmId: number, name: string) => {
-    const nowTaken = toggleTaken(selected, alarmId);
-    if (nowTaken) toast.success(`${name} 복용을 기록했어요`);
+  const handleToggle = async (dose: ScheduledDose) => {
+    if (toDateKey(selected) !== toDateKey(koreaToday())) return;
+    try {
+      await toggleTaken(dose.doseId, !dose.taken);
+      if (!dose.taken) toast.success(`${dose.alarm.medicineName} 복용을 기록했어요`);
+    } catch { toast.error("복용 기록을 저장하지 못했어요"); }
   };
+  if (weekly.loading || home.loading) return <MobileLayout><PageHeader title="복약 체크 기록" /><p className="p-5">불러오는 중...</p></MobileLayout>;
+  if (weekly.error || home.error || !weekly.data || !home.data) return <MobileLayout><PageHeader title="복약 체크 기록" /><div className="p-5"><p role="alert">복약 정보를 불러오지 못했어요.</p><button onClick={refresh} className="mt-3 text-primary">다시 시도</button></div></MobileLayout>;
 
   return (
     <MobileLayout showBottomNav={false}>
@@ -92,8 +104,9 @@ export default function CheckRecordPage() {
             <button
               type="button"
               onClick={() => setSelected((d) => addDays(d, 7))}
+              disabled={!nextWeekAllowed}
               aria-label="다음 주"
-              className="flex size-9 items-center justify-center rounded-full bg-slate-50 text-slate-600"
+              className="flex size-9 items-center justify-center rounded-full bg-slate-50 text-slate-600 disabled:opacity-30"
             >
               <ChevronRight size={18} />
             </button>
@@ -137,10 +150,10 @@ export default function CheckRecordPage() {
                 <div className="space-y-2.5">
                   {g.items.map((dose) => (
                     <DoseCard
-                      key={dose.alarm.id}
+                      key={dose.doseId}
                       dose={dose}
-                      disabled={isFuture}
-                      onToggle={() => handleToggle(dose.alarm.id, dose.alarm.medicineName)}
+                      disabled={!isToday}
+                      onToggle={() => void handleToggle(dose)}
                     />
                   ))}
                 </div>

@@ -27,7 +27,8 @@ const birthLabel = (d: string) => (d ? d.replaceAll("-", ".") : "입력 안 함"
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export default function ProfilePage() {
-  const { profile, updateProfile } = useUser();
+  const { profile, updateProfile, loading, error, reload } = useUser();
+  const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<Field | null>(null);
 
   const rows: { field: Field; value: string }[] = [
@@ -37,11 +38,18 @@ export default function ProfilePage() {
     { field: "email", value: profile.email },
   ];
 
-  const save = (patch: Partial<UserProfile>) => {
-    updateProfile(patch);
-    setEditing(null);
-    toast.success("정보를 수정했어요");
+  const save = async (patch: Partial<UserProfile>) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateProfile(patch);
+      setEditing(null);
+      toast.success("정보를 수정했어요");
+    } catch {
+      toast.error("정보를 저장하지 못했어요. 다시 시도해 주세요.");
+    } finally { setSaving(false); }
   };
+  if (loading || error) return <MobileLayout><PageHeader title="내 정보" /><div className="p-5"><p role="status">{error ?? "불러오는 중..."}</p>{error && <button onClick={reload} className="mt-3 text-primary">다시 시도</button>}</div></MobileLayout>;
 
   return (
     <MobileLayout showBottomNav={false}>
@@ -96,8 +104,9 @@ export default function ProfilePage() {
           key={editing}
           field={editing}
           profile={profile}
-          onClose={() => setEditing(null)}
+          onClose={() => { if (!saving) setEditing(null); }}
           onSave={save}
+          saving={saving}
         />
       )}
     </MobileLayout>
@@ -109,11 +118,13 @@ function EditSheet({
   profile,
   onClose,
   onSave,
+  saving,
 }: {
   field: Field;
   profile: UserProfile;
   onClose: () => void;
-  onSave: (patch: Partial<UserProfile>) => void;
+  onSave: (patch: Partial<UserProfile>) => Promise<void>;
+  saving: boolean;
 }) {
   const [text, setText] = useState(field === "gender" ? "" : profile[field] ?? "");
   const [gender, setGender] = useState<Gender>(profile.gender);
@@ -128,8 +139,8 @@ function EditSheet({
           : text.trim().length > 0;
 
   const submit = () => {
-    if (!valid) return;
-    onSave(field === "gender" ? { gender } : { [field]: text.trim() });
+    if (!valid || saving) return;
+    void onSave(field === "gender" ? { gender } : { [field]: text.trim() });
   };
 
   return (
@@ -146,6 +157,7 @@ function EditSheet({
               key={g.value}
               type="button"
               onClick={() => setGender(g.value)}
+              disabled={saving}
               aria-pressed={gender === g.value}
               className={`flex flex-col items-center gap-2 rounded-2xl border-2 py-5 transition ${
                 gender === g.value ? "border-primary bg-primary-50" : "border-slate-100 bg-slate-50"
@@ -162,6 +174,8 @@ function EditSheet({
         <div className="mb-6">
           <input
             autoFocus
+            aria-label={`${FIELD_LABEL[field]} 입력`}
+            disabled={saving}
             type={field === "email" ? "email" : field === "birthDate" ? "date" : "text"}
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -175,16 +189,16 @@ function EditSheet({
       )}
 
       <div className="grid grid-cols-[1fr_2fr] gap-2">
-        <button type="button" onClick={onClose} className="h-14 rounded-2xl bg-slate-100 font-semibold text-slate-600">
+        <button type="button" onClick={onClose} disabled={saving} className="h-14 rounded-2xl bg-slate-100 font-semibold text-slate-600">
           취소
         </button>
         <button
           type="button"
           onClick={submit}
-          disabled={!valid}
+          disabled={!valid || saving}
           className="h-14 rounded-2xl bg-primary font-semibold text-white disabled:bg-slate-200 disabled:text-slate-400"
         >
-          저장
+          {saving ? "저장 중..." : "저장"}
         </button>
       </div>
     </BottomSheet>

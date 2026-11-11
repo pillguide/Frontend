@@ -1,57 +1,78 @@
-// src/features/intake/hooks/useIntakeStats.ts
-import { useMemo } from "react";
-import { useAlarms } from "../../alarm/context/AlarmContext";
+import { useEffect, useRef, useState } from "react";
+import { useNow } from "../../home/hooks/useNow";
+import { authStorage } from "../../../utils/authStorage";
+import { medicationApi, type Dose, type Home, type Week } from "../api/medicationApi";
 import { useIntake } from "../context/IntakeContext";
-import { addDays, startOfDay, weekDates } from "../utils/date";
-import { dosesForDate, statsOf } from "../utils/schedule";
+import { toDateKey, koreaToday } from "../utils/date";
+import type { ScheduledDose } from "../utils/schedule";
 
-/** 특정 날짜의 복약 일정 + 완료 여부 */
-export function useDoses(date: Date) {
-  const { alarms } = useAlarms();
-  const { log } = useIntake();
-  const time = startOfDay(date).getTime();
-
-  return useMemo(() => {
-    const doses = dosesForDate(alarms, log, new Date(time), new Date());
-    return { doses, ...statsOf(doses) };
-  }, [alarms, log, time]);
+type Result<T> = { key: string; data?: T; error?: string };
+function useResource<T>(key: string, load: () => Promise<T>) {
+  const { revision } = useIntake();
+  const requestKey = `${key}:${revision}`;
+  const [result, setResult] = useState<Result<T> | null>(null);
+  useEffect(() => {
+    if (!authStorage.isLoggedIn()) return;
+    let current = true;
+    load().then((data) => { if (current) setResult({ key: requestKey, data }); })
+      .catch(() => { if (current) setResult({ key: requestKey, error: "복약 정보를 불러오지 못했어요." }); });
+    return () => { current = false; };
+  }, [requestKey, load]);
+  const active = result?.key === requestKey ? result : null;
+  return { data: active?.data, error: active?.error, loading: !active && authStorage.isLoggedIn() };
 }
-
-/** 주간 통계 + 연속 복약일 */
+const loadHome = () => medicationApi.home();
+// The server sends a local date-time in Asia/Seoul, without an offset.
+export function doseRefreshDelay(scheduledAt: string, now = Date.now()): number {
+  return Math.max(0, Date.parse(`${scheduledAt}+09:00`) - now + 1000);
+}
+export function useHomeStats() {
+  const now = useNow();
+  const { refresh } = useIntake();
+  const result = useResource<Home>(`home:${toDateKey(koreaToday(now))}`, loadHome);
+  const refreshedDose = useRef<string | null>(null);
+  const next = result.data?.nextDose;
+  useEffect(() => {
+    if (!next) return;
+    const key = `${next.id}:${next.scheduledAt}`;
+    if (refreshedDose.current === key) return;
+    const delay = doseRefreshDelay(next.scheduledAt);
+    if (!Number.isFinite(delay)) return;
+    const timer = setTimeout(() => { refreshedDose.current = key; refresh(); }, delay);
+    return () => clearTimeout(timer);
+  }, [next, refresh]);
+  return result;
+}
 export function useWeekStats(anchor: Date) {
-  const { alarms } = useAlarms();
-  const { log } = useIntake();
-  const time = startOfDay(anchor).getTime();
-
-  return useMemo(() => {
-    const today = startOfDay(new Date());
-    const days = weekDates(new Date(time)).map((date) => {
-      const stats = statsOf(dosesForDate(alarms, log, date, today));
-      return { date, ...stats, isFuture: date > today };
-    });
-    const counted = days.filter((d) => !d.isFuture);
-    const total = counted.reduce((s, d) => s + d.total, 0);
-    const taken = counted.reduce((s, d) => s + d.taken, 0);
-    return { days, total, taken, rate: total === 0 ? 0 : taken / total };
-  }, [alarms, log, time]);
+  const key = toDateKey(anchor);
+  // useResource needs a stable loader across renders.
+  return useWeekResource(key);
 }
-
-/** 오늘까지 하루 일정을 전부 챙긴 날이 며칠 연속인지 (오늘이 아직 미완료면 어제부터 셈) */
-export function useStreak() {
-  const { alarms } = useAlarms();
-  const { log } = useIntake();
-
-  return useMemo(() => {
-    const today = startOfDay(new Date());
-    let streak = 0;
-    for (let i = 0; i < 365; i++) {
-      const date = addDays(today, -i);
-      const { total, taken } = statsOf(dosesForDate(alarms, log, date, today));
-      if (total === 0) continue; // 일정 없는 날은 건너뜀
-      if (taken === total) streak++;
-      else if (i === 0) continue; // 오늘은 아직 진행 중
-      else break;
-    }
-    return streak;
-  }, [alarms, log]);
+function useWeekResource(key: string) {
+  const { revision } = useIntake();
+  const requestKey = `${key}:${revision}`;
+  const [result, setResult] = useState<Result<Week> | null>(null);
+  useEffect(() => {
+    if (!authStorage.isLoggedIn()) return;
+    let current = true;
+    medicationApi.week(key).then((data) => { if (current) setResult({ key: requestKey, data }); })
+      .catch(() => { if (current) setResult({ key: requestKey, error: "복약 기록을 불러오지 못했어요." }); });
+    return () => { current = false; };
+  }, [key, requestKey]);
+  const active = result?.key === requestKey ? result : null;
+  return { data: active?.data, error: active?.error, loading: !active && authStorage.isLoggedIn() };
+}
+export function toScheduledDose(d: Dose): ScheduledDose {
+  const time = d.scheduledAt.split("T")[1] ?? "00:00";
+  const [hour, minute] = time.split(":").map(Number);
+  return { doseId: d.id, alarm: { id: d.reminderId, medicineName: d.medicationName, dosage: d.dosage,
+    hour, minute, memo: d.memo ?? "", repeatDays: [], enabled: true }, taken: d.status === "TAKEN" };
+}
+export function weekView(week: Week) {
+  const today = toDateKey(koreaToday());
+  return { total: week.progress.total, taken: week.progress.taken,
+    rate: week.progress.total ? week.progress.taken / week.progress.total : 0,
+    days: week.days.map((day) => { const [year, month, date] = day.date.split("-").map(Number);
+      return { date: new Date(year, month - 1, date), total: day.progress.total, taken: day.progress.taken,
+        rate: day.progress.total ? day.progress.taken / day.progress.total : 0, isFuture: day.date > today }; }) };
 }

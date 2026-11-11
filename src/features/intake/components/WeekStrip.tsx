@@ -1,6 +1,6 @@
 // src/features/intake/components/WeekStrip.tsx
 import ProgressRing from "../../../components/ui/ProgressRing";
-import { WEEKDAY_SHORT, toDateKey } from "../utils/date";
+import { WEEKDAY_SHORT, toDateKey, koreaToday } from "../utils/date";
 
 export interface WeekDay {
   date: Date;
@@ -18,7 +18,7 @@ interface WeekStripProps {
 
 export default function WeekStrip({ days, selected, onSelect }: WeekStripProps) {
   const selectedKey = toDateKey(selected);
-  const todayKey = toDateKey(new Date());
+  const todayKey = toDateKey(koreaToday());
 
   return (
     <div className="grid grid-cols-7 gap-1">

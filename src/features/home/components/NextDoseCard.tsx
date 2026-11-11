@@ -38,7 +38,8 @@ export default function NextDoseCard({ doses, now, onOpen }: NextDoseCardProps) 
     );
   }
 
-  const target = next ?? missed[missed.length - 1];
+  if (!next) return null;
+  const target = next;
   const isMissed = !next;
   const diff = target.alarm.hour * 60 + target.alarm.minute - nowMin;
 
