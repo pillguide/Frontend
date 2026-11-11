@@ -1,6 +1,7 @@
 // 복약 알림 API (Backend: /api/v1/medication/reminders)
 import { api } from "../../../api/http";
 import type { Alarm, AlarmDraft, Weekday } from "../types/alarm";
+import { koreaToday, toDateKey } from "../../intake/utils/date";
 
 // java.time.DayOfWeek 이름. 인덱스는 Date.getDay()와 같은 0=일요일 기준
 const DAY_NAMES = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"] as const;
@@ -29,9 +30,9 @@ interface ReminderRequest {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/** 기기 기준 오늘 날짜 (YYYY-MM-DD) */
+/** 서버와 같은 한국 시간 기준 오늘 날짜 (YYYY-MM-DD) */
 export function todayString(date = new Date()): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return toDateKey(koreaToday(date));
 }
 
 function toAlarm(res: ReminderResponse): Alarm {

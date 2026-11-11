@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNow } from "../../home/hooks/useNow";
 import { authStorage } from "../../../utils/authStorage";
 import { medicationApi, type Dose, type Home, type Week } from "../api/medicationApi";
 import { useIntake } from "../context/IntakeContext";
@@ -21,7 +22,27 @@ function useResource<T>(key: string, load: () => Promise<T>) {
   return { data: active?.data, error: active?.error, loading: !active && authStorage.isLoggedIn() };
 }
 const loadHome = () => medicationApi.home();
-export function useHomeStats() { return useResource<Home>(`home:${toDateKey(koreaToday())}`, loadHome); }
+// The server sends a local date-time in Asia/Seoul, without an offset.
+export function doseRefreshDelay(scheduledAt: string, now = Date.now()): number {
+  return Math.max(0, Date.parse(`${scheduledAt}+09:00`) - now + 1000);
+}
+export function useHomeStats() {
+  const now = useNow();
+  const { refresh } = useIntake();
+  const result = useResource<Home>(`home:${toDateKey(koreaToday(now))}`, loadHome);
+  const refreshedDose = useRef<string | null>(null);
+  const next = result.data?.nextDose;
+  useEffect(() => {
+    if (!next) return;
+    const key = `${next.id}:${next.scheduledAt}`;
+    if (refreshedDose.current === key) return;
+    const delay = doseRefreshDelay(next.scheduledAt);
+    if (!Number.isFinite(delay)) return;
+    const timer = setTimeout(() => { refreshedDose.current = key; refresh(); }, delay);
+    return () => clearTimeout(timer);
+  }, [next, refresh]);
+  return result;
+}
 export function useWeekStats(anchor: Date) {
   const key = toDateKey(anchor);
   // useResource needs a stable loader across renders.

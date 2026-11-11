@@ -8,6 +8,7 @@ import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
 import ProgressRing from "../../../components/ui/ProgressRing";
 import { ROUTES } from "../../../constants/routes";
+import { useNow } from "../../home/hooks/useNow";
 import { useIntake } from "../context/IntakeContext";
 import { toScheduledDose, useHomeStats, useWeekStats, weekView } from "../hooks/useIntakeStats";
 import { WEEKDAY_SHORT, addDays, formatKoreanTime, formatMonthDay, formatWeekLabel, startOfDay, startOfWeek, toDateKey, koreaToday } from "../utils/date";
@@ -17,7 +18,8 @@ import DoseCard from "../components/DoseCard";
 
 export default function CheckRecordPage() {
   const navigate = useNavigate();
-  const today = startOfDay(koreaToday());
+  const now = useNow();
+  const today = startOfDay(koreaToday(now));
   const [selected, setSelected] = useState<Date>(today);
   const { toggleTaken, refresh } = useIntake();
 
@@ -44,6 +46,7 @@ export default function CheckRecordPage() {
   }, []);
 
   const handleToggle = async (dose: ScheduledDose) => {
+    if (toDateKey(selected) !== toDateKey(koreaToday())) return;
     try {
       await toggleTaken(dose.doseId, !dose.taken);
       if (!dose.taken) toast.success(`${dose.alarm.medicineName} 복용을 기록했어요`);

@@ -1,5 +1,6 @@
 // src/features/mypage/components/WeeklySummaryCard.tsx
 import { ChevronRight, Flame } from "lucide-react";
+import { useNow } from "../../home/hooks/useNow";
 import { useIntake } from "../../intake/context/IntakeContext";
 import { koreaToday } from "../../intake/utils/date";
 import ProgressRing from "../../../components/ui/ProgressRing";
@@ -7,7 +8,8 @@ import { useHomeStats, useWeekStats, weekView } from "../../intake/hooks/useInta
 
 export default function WeeklySummaryCard({ onClick }: { onClick: () => void }) {
   const { refresh } = useIntake();
-  const weekly = useWeekStats(koreaToday());
+  const now = useNow();
+  const weekly = useWeekStats(koreaToday(now));
   const home = useHomeStats();
   if (weekly.loading || home.loading) return <p>복약 정보를 불러오는 중...</p>;
   if (weekly.error || home.error || !weekly.data || !home.data) return <div><p role="alert">복약 정보를 불러오지 못했어요.</p><button onClick={refresh} className="text-primary">다시 시도</button></div>;

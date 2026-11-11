@@ -1,7 +1,7 @@
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "vite";
-let server, medicationApi, memberApi, authStorage, dates, stats;
+let server, medicationApi, memberApi, authStorage, dates, stats, reminder;
 const original = { fetch: globalThis.fetch, localStorage: globalThis.localStorage, window: globalThis.window };
 const values = new Map();
 before(async () => {
@@ -13,6 +13,7 @@ before(async () => {
   ({ authStorage } = await server.ssrLoadModule("/src/utils/authStorage.ts"));
   dates = await server.ssrLoadModule("/src/features/intake/utils/date.ts");
   stats = await server.ssrLoadModule("/src/features/intake/hooks/useIntakeStats.ts");
+  reminder = await server.ssrLoadModule("/src/features/alarm/api/reminderApi.ts");
 });
 after(async () => { Object.assign(globalThis, original); await server.close(); });
 test("auth transitions notify once while token refresh does not reset state", () => {
@@ -51,4 +52,15 @@ test("server schedule keeps dose and reminder identities distinct", () => {
 test("Korean day and Monday week start remain correct at UTC boundary", () => {
   const now = dates.koreaToday(new Date("2026-11-11T15:01:00Z"));
   assert.equal(dates.toDateKey(now), "2026-11-12"); assert.equal(dates.toDateKey(dates.startOfWeek(now)), "2026-11-09");
+});
+
+test("reminder start date follows Seoul across UTC and Pacific date boundaries", () => {
+  assert.equal(reminder.todayString(new Date("2026-11-11T15:01:00Z")), "2026-11-12");
+  assert.equal(reminder.todayString(new Date("2026-11-12T07:59:00Z")), "2026-11-12");
+  assert.equal(reminder.todayString(new Date("2026-11-12T15:00:00Z")), "2026-11-13");
+});
+test("next dose refresh is scheduled once after its Seoul time boundary", () => {
+  const before = Date.parse("2026-11-12T00:29:30Z");
+  assert.equal(stats.doseRefreshDelay("2026-11-12T09:30:00", before), 31_000);
+  assert.equal(stats.doseRefreshDelay("2026-11-12T09:30:00", before + 60_000), 0);
 });

@@ -1,12 +1,18 @@
-// src/features/home/hooks/useNow.ts
 import { useEffect, useState } from "react";
 
-/** 1분마다 갱신되는 현재 시각 */
+/** Refresh at minute boundaries and when returning to the app. */
 export function useNow(intervalMs = 60_000) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(id);
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { setNow(new Date()); schedule(); }, intervalMs - Date.now() % intervalMs);
+    };
+    const onVisibility = () => { if (!document.hidden) { setNow(new Date()); schedule(); } };
+    schedule();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { clearTimeout(timer); document.removeEventListener("visibilitychange", onVisibility); };
   }, [intervalMs]);
   return now;
 }
