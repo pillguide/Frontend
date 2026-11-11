@@ -1,6 +1,10 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { fontScaleStorage, type FontScale } from "./utils/fontScale";
+import { authStorage } from "./utils/authStorage";
+import LoginRequired from "./components/common/LoginRequired";
+import MobileLayout from "./layout/MobileLayout";
+import type { ReactNode } from "react";
 import { ROUTES } from "./constants/routes";
 
 import LoginPage from "./features/auth/pages/LoginPage";
@@ -39,7 +43,26 @@ function PushSync() {
   return null;
 }
 
-export default function App() {
+function subscribeAuth(callback: () => void) {
+  window.addEventListener("auth-change", callback);
+  window.addEventListener("storage", callback);
+  return () => { window.removeEventListener("auth-change", callback); window.removeEventListener("storage", callback); };
+}
+
+function Protected({ children }: { children: ReactNode }) {
+  return authStorage.isLoggedIn() ? children : <MobileLayout><LoginRequired /></MobileLayout>;
+}
+
+function SessionApp() {
+  const identity = useSyncExternalStore(subscribeAuth, authStorage.sessionIdentity);
+  const previousIdentity = useRef(identity);
+  const { pathname } = useLocation();
+  useLayoutEffect(() => {
+    if (previousIdentity.current !== identity) {
+      scanDraft.clear();
+      previousIdentity.current = identity;
+    }
+  }, [identity]);
   const [fontScale] = useState<FontScale>(() => fontScaleStorage.get());
 
   useEffect(() => {
@@ -47,9 +70,10 @@ export default function App() {
     fontScaleStorage.set(fontScale);
   }, [fontScale]);
 
+  if (pathname === ROUTES.OAUTH_CALLBACK) return <OAuthCallbackPage />;
+
   return (
-    <BrowserRouter>
-      <UserProvider>
+      <UserProvider key={identity}>
         <AlarmProvider>
           <IntakeProvider>
             <PushSync />
@@ -57,19 +81,15 @@ export default function App() {
             <Routes>
               {/* 인증 */}
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-              <Route
-                path={ROUTES.OAUTH_CALLBACK}
-                element={<OAuthCallbackPage />}
-              />
               <Route path={ROUTES.SIGNUP} element={<SignupPage />} />
 
               {/* 메인 */}
               <Route path={ROUTES.HOME} element={<HomePage />} />
               <Route path={ROUTES.SEARCH} element={<SearchPage />} />
               <Route path={ROUTES.MY_DRUGS} element={<MyDrugsPage />} />
-              <Route path={ROUTES.MY_PAGE} element={<MyPage />} />
-              <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-              <Route path={ROUTES.CHECK_RECORD} element={<CheckRecordPage />} />
+              <Route path={ROUTES.MY_PAGE} element={<Protected><MyPage /></Protected>} />
+              <Route path={ROUTES.PROFILE} element={<Protected><ProfilePage /></Protected>} />
+              <Route path={ROUTES.CHECK_RECORD} element={<Protected><CheckRecordPage /></Protected>} />
               <Route path={ROUTES.SCAN} element={<ScanPage />} />
               <Route path={ROUTES.SCAN_RECORD} element={<ScanRecordPage />} />
               <Route path={ROUTES.SCAN_RESULT} element={<ScanResultPage />} />
@@ -84,13 +104,16 @@ export default function App() {
               />
 
               {/* 복약 알람 */}
-              <Route path={ROUTES.ALARM} element={<AlarmListPage />} />
-              <Route path={ROUTES.ALARM_NEW} element={<AlarmFormPage />} />
-              <Route path={ROUTES.ALARM_EDIT} element={<AlarmFormPage />} />
+              <Route path={ROUTES.ALARM} element={<Protected><AlarmListPage /></Protected>} />
+              <Route path={ROUTES.ALARM_NEW} element={<Protected><AlarmFormPage /></Protected>} />
+              <Route path={ROUTES.ALARM_EDIT} element={<Protected><AlarmFormPage /></Protected>} />
             </Routes>
           </IntakeProvider>
         </AlarmProvider>
       </UserProvider>
-    </BrowserRouter>
   );
+}
+
+export default function App() {
+  return <BrowserRouter><SessionApp /></BrowserRouter>;
 }

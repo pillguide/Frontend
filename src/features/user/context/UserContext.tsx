@@ -1,50 +1,36 @@
-// src/features/user/context/UserContext.tsx
-// 로그인 사용자 프로필. 백엔드 연결 전까지 localStorage에 저장.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { authStorage } from "../../../utils/authStorage";
+import { memberApi } from "../api/memberApi";
 import type { UserProfile } from "../types/user";
-import { userMock } from "../mock/user.mock";
-
-const STORAGE_KEY = "userProfile";
-
-function loadProfile(): UserProfile {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...userMock, ...(JSON.parse(raw) as Partial<UserProfile>) };
-  } catch {
-    // storage 접근 불가 → mock
-  }
-  return userMock;
-}
-
-interface UserContextValue {
-  profile: UserProfile;
-  updateProfile: (patch: Partial<UserProfile>) => void;
-}
-
-const UserContext = createContext<UserContextValue | null>(null);
-
+const blank: UserProfile = { name: "", gender: null, birthDate: "", email: "" };
+interface Value { profile: UserProfile; loading: boolean; error: string | null; reload: () => void; updateProfile: (patch: Partial<UserProfile>) => Promise<void> }
+const Context = createContext<Value | null>(null);
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<UserProfile>(loadProfile);
-
+  const [profile, setProfile] = useState<UserProfile>(blank);
+  const [loading, setLoading] = useState(authStorage.isLoggedIn());
+  const [revision, setRevision] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-    } catch {
-      // 무시
-    }
-  }, [profile]);
-
-  const updateProfile = useCallback((patch: Partial<UserProfile>) => {
-    setProfile((prev) => ({ ...prev, ...patch }));
+    if (!authStorage.isLoggedIn()) return;
+    let current = true;
+    memberApi.me().then((data) => { if (current) setProfile(data); })
+      .catch(() => { if (current) setError("사용자 정보를 불러오지 못했어요."); })
+      .finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
+  }, [revision]);
+  const reload = useCallback(() => { setLoading(true); setError(null); setRevision((n) => n + 1); }, []);
+  const updateProfile = useCallback(async (patch: Partial<UserProfile>) => {
+    if (!authStorage.isLoggedIn()) throw new Error("로그인이 필요합니다.");
+    const updated = await memberApi.update(patch);
+    setProfile(updated);
+    setError(null);
   }, []);
-
-  const value = useMemo(() => ({ profile, updateProfile }), [profile, updateProfile]);
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+  const value = useMemo(() => ({ profile, loading, error, reload, updateProfile }), [profile, loading, error, reload, updateProfile]);
+  return <Context.Provider value={value}>{children}</Context.Provider>;
 }
-
 // eslint-disable-next-line react-refresh/only-export-components
 export function useUser() {
-  const ctx = useContext(UserContext);
-  if (!ctx) throw new Error("useUser는 UserProvider 안에서만 사용할 수 있어요");
-  return ctx;
+  const value = useContext(Context);
+  if (!value) throw new Error("UserProvider가 필요합니다.");
+  return value;
 }

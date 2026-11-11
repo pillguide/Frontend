@@ -1,3 +1,8 @@
+// Backend medication dates and times are in Asia/Seoul.
+export function koreaToday(now = new Date()): Date {
+  const shifted = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return new Date(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate(), shifted.getUTCHours(), shifted.getUTCMinutes());
+}
 // src/features/intake/utils/date.ts
 export const WEEKDAY_SHORT = ["일", "월", "화", "수", "목", "금", "토"] as const;
 
@@ -17,9 +22,9 @@ export function addDays(d: Date, days: number): Date {
   return next;
 }
 
-/** 일요일 시작 주 */
+/** 월요일 시작 주 */
 export function startOfWeek(d: Date): Date {
-  return addDays(d, -d.getDay());
+  return addDays(d, -(d.getDay() + 6) % 7);
 }
 
 export function weekDates(d: Date): Date[] {
@@ -34,7 +39,7 @@ export function formatMonthDay(d: Date): string {
 
 /** 9월 3주차 (주의 목요일 기준 월로 계산) */
 export function formatWeekLabel(d: Date): string {
-  const thursday = addDays(startOfWeek(d), 4);
+  const thursday = addDays(startOfWeek(d), 3);
   const first = new Date(thursday.getFullYear(), thursday.getMonth(), 1);
   const firstThursday = addDays(first, (4 - first.getDay() + 7) % 7);
   const week = Math.floor((thursday.getTime() - firstThursday.getTime()) / (7 * 86400000)) + 1;

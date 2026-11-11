@@ -18,7 +18,7 @@ export default function MedicineHero({ name, imageUrl, tags }: MedicineHeroProps
           <Pill size={44} className="text-slate-300" />
         </div>
       )}
-      <h2 className="mb-3 text-center text-xl font-bold text-slate-900">{name}</h2>
+      <h2 className="mb-3 max-w-full break-words text-center text-xl font-bold text-slate-900">{name}</h2>
       <div className="flex gap-2">
         {tags.map((tag, idx) => (
           <span

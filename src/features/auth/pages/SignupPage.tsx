@@ -10,7 +10,6 @@ import femaleIcon from "../../../assets/여자.png";
 import { fontScaleStorage, type FontScale } from "../../../utils/fontScale";
 import toast from "react-hot-toast";
 import { authStorage } from "../../../utils/authStorage";
-import { memberApi } from "../../user/api/memberApi";
 
 type Step = "NAME" | "GENDER_BIRTH" | "EMAIL" | "FONT_SIZE" | "DONE";
 
@@ -53,22 +52,14 @@ export default function ProfileOnboardingPage() {
   // 성별·생년월일·이메일은 서버에 저장 (이름·글자 크기는 아직 서버 항목이 없어 기기에만 저장)
   const submit = async () => {
     if (!form.gender) return;
-    if (authStorage.isLoggedIn()) {
-      setSubmitting(true);
-      try {
-        await memberApi.submitAdditionalInfo({
-          gender: form.gender,
-          birthDate: form.birthDate,
-          email: form.email.trim() || undefined,
-        });
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "가입 정보를 저장하지 못했어요");
-        return;
-      } finally {
-        setSubmitting(false);
-      }
-    }
-    updateProfile({ ...form, name: form.name.trim(), email: form.email.trim() });
+    if (!authStorage.isLoggedIn()) { toast.error("로그인이 필요합니다."); return; }
+    setSubmitting(true);
+    try {
+      await updateProfile({ ...form, name: form.name.trim(), email: form.email.trim() });
+    } catch {
+      toast.error("정보를 저장하지 못했어요");
+      return;
+    } finally { setSubmitting(false); }
     setStep("DONE");
   };
 

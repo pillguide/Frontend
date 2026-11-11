@@ -5,7 +5,10 @@ import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES, alarmEditPath } from "../../../constants/routes";
 import { useUser } from "../../user/context/UserContext";
 import { useIntake } from "../../intake/context/IntakeContext";
-import { useDoses, useStreak } from "../../intake/hooks/useIntakeStats";
+import { toScheduledDose, useHomeStats } from "../../intake/hooks/useIntakeStats";
+import { koreaToday } from "../../intake/utils/date";
+import { authStorage } from "../../../utils/authStorage";
+import LoginRequired from "../../../components/common/LoginRequired";
 import { useNow } from "../hooks/useNow";
 import HomeGreeting from "../components/HomeGreeting";
 import TodayHeroCard from "../components/TodayHeroCard";
@@ -16,40 +19,47 @@ import HealthTipCard from "../components/HealthTipCard";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const now = useNow();
-  const { profile } = useUser();
-  const { toggleTaken } = useIntake();
-  const { doses, total, taken } = useDoses(now);
-  const streak = useStreak();
+  const clock = useNow();
+  const now = koreaToday(clock);
+  const { profile, error: profileError } = useUser();
+  const { toggleTaken, refresh } = useIntake();
+  const { data, loading, error } = useHomeStats();
+  const doses = data?.doses.map(toScheduledDose) ?? [];
+  const total = data?.progress.total ?? 0;
+  const taken = data?.progress.taken ?? 0;
+  const streak = data?.streak ?? 0;
 
   const openAlarm = (alarmId: number) => navigate(alarmEditPath(alarmId));
 
-  const handleToggle = (alarmId: number) => {
-    const nowTaken = toggleTaken(now, alarmId);
-    if (!nowTaken) return;
-    const remain = total - taken - 1;
-    toast.success(remain === 0 ? "오늘 약을 모두 챙겼어요!" : `복용 완료! ${remain}개 남았어요`);
+  const handleToggle = async (doseId: number) => {
+    const dose = doses.find((item) => item.doseId === doseId);
+    if (!dose) return;
+    try {
+      await toggleTaken(doseId, !dose.taken);
+      if (!dose.taken) toast.success("복용을 기록했어요");
+    } catch { toast.error("복용 기록을 저장하지 못했어요"); }
   };
 
   return (
     <MobileLayout>
       <div className="bg-gradient-to-b from-primary-50/70 to-transparent">
         <HomeGreeting userName={profile.name} now={now} />
+        {profileError && <p role="alert" className="px-5 pb-2 text-sm">{profileError}</p>}
         <div className="px-4">
-          <TodayHeroCard total={total} taken={taken} streak={streak} onClick={() => navigate(ROUTES.CHECK_RECORD)} />
+          {data && <TodayHeroCard total={total} taken={taken} streak={streak} onClick={() => navigate(ROUTES.CHECK_RECORD)} />}
         </div>
       </div>
 
       <div className="space-y-5 px-4 pb-8 pt-4">
-        <NextDoseCard doses={doses} now={now} onOpen={openAlarm} />
+        {data?.nextDose && <NextDoseCard doses={[toScheduledDose(data.nextDose)]} now={now} onOpen={openAlarm} />}
         <QuickMenu />
-        <MedicationChecklist
+        {!authStorage.isLoggedIn() ? <LoginRequired /> : loading ? <p>복약 정보를 불러오는 중...</p> : error ? <div><p role="alert">{error}</p><button onClick={refresh} className="text-primary">다시 시도</button></div> : data && <MedicationChecklist
           doses={doses}
-          onToggle={handleToggle}
+          onToggle={(id) => void handleToggle(id)}
           onOpen={openAlarm}
           onManage={() => navigate(ROUTES.ALARM)}
           onAdd={() => navigate(ROUTES.ALARM_NEW)}
-        />
+        />}
         <HealthTipCard date={now} />
       </div>
     </MobileLayout>

@@ -6,6 +6,7 @@ import { toDateKey } from "./date";
 export type IntakeLog = Record<string, number[]>; // dateKey → 복용 완료한 alarmId 목록
 
 export interface ScheduledDose {
+  doseId: number;
   alarm: Alarm;
   taken: boolean;
 }
@@ -28,7 +29,7 @@ export function alarmsForDate(alarms: Alarm[], date: Date, today: Date): Alarm[]
 
 export function dosesForDate(alarms: Alarm[], log: IntakeLog, date: Date, today: Date): ScheduledDose[] {
   const takenIds = log[toDateKey(date)] ?? [];
-  return alarmsForDate(alarms, date, today).map((alarm) => ({ alarm, taken: takenIds.includes(alarm.id) }));
+  return alarmsForDate(alarms, date, today).map((alarm) => ({ doseId: alarm.id, alarm, taken: takenIds.includes(alarm.id) }));
 }
 
 export function statsOf(doses: ScheduledDose[]): DayStats {

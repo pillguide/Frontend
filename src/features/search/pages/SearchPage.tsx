@@ -4,13 +4,10 @@ import { Camera, ChevronLeft, ChevronRight, Clock, Pill, Search, SearchX, X } fr
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES, singleMedicinePath } from "../../../constants/routes";
-import { medicineCatalog, type MedicineSearchItem } from "../../medicine/mock/medicine.mock";
 import { drugApi, type DrugSearchItem } from "../../medicine/api/drugApi";
 import { recentSearchStorage } from "../utils/searchMedicine";
 import HighlightText from "../components/HighlightText";
 
-// 많이 찾는 약: 누르면 그 이름으로 검색 (서버 인기 검색어 API 생기면 교체)
-const POPULAR_IDS = [14, 12, 11, 16, 13];
 const PAGE_SIZE = 20;
 const DEBOUNCE_MS = 300;
 
@@ -32,9 +29,7 @@ export default function SearchPage() {
 
   const keyword = query.trim();
   const hasQuery = keyword.length > 0;
-  const popular = POPULAR_IDS.map((id) => medicineCatalog.find((m) => m.id === id)).filter(
-    (m): m is MedicineSearchItem => !!m,
-  );
+
 
   // 입력이 멈추면 서버 검색
   useEffect(() => {
@@ -162,28 +157,6 @@ export default function SearchPage() {
                 </div>
               </section>
             )}
-
-            {/* 많이 찾는 약 */}
-            <section>
-              <h2 className="mb-3 text-base font-bold text-slate-900">많이 찾는 약</h2>
-              <ol className="divide-y divide-slate-100 rounded-[20px] bg-white shadow-card">
-                {popular.map((item, i) => (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      onClick={() => setQuery(item.name)}
-                      className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
-                    >
-                      <span className={`w-5 text-center text-base font-bold ${i < 3 ? "text-primary" : "text-slate-400"}`}>
-                        {i + 1}
-                      </span>
-                      <span className="flex-1 truncate text-base text-slate-900">{item.name}</span>
-                      <span className="text-xs text-slate-400">{item.category}</span>
-                    </button>
-                  </li>
-                ))}
-              </ol>
-            </section>
 
             <ScanBanner onClick={() => navigate(ROUTES.SCAN)} />
           </div>

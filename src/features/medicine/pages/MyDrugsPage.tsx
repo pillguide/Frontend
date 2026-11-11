@@ -97,7 +97,7 @@ export default function MyDrugsPage() {
                 className="rounded-2xl bg-white p-4 shadow-sm"
               >
                 <button
-                  className="text-left font-semibold"
+                  className="max-w-full break-words text-left font-semibold"
                   onClick={() => navigate(singleMedicinePath(drug.drugId))}
                 >
                   {drug.name}

@@ -37,10 +37,13 @@ const iconButton = "flex size-9 items-center justify-center rounded-full";
 
 export default function AlarmFormPage() {
   const { id } = useParams();
-  const { getAlarm } = useAlarms();
+  const { getAlarm, loading, error } = useAlarms();
   const alarm = id ? getAlarm(Number(id)) : undefined;
   const [searchParams] = useSearchParams();
   const presetName = searchParams.get("name") ?? "";
+
+  if (id && loading) return <MobileLayout><PageHeader title="복약 알람" /><p className="p-5">불러오는 중...</p></MobileLayout>;
+  if (id && error) return <MobileLayout><PageHeader title="복약 알람" /><p role="alert" className="p-5">알람을 불러오지 못했어요.</p></MobileLayout>;
 
   // 잘못된 id로 들어오면 목록으로
   if (id && !alarm) return <Navigate to={ROUTES.ALARM} replace />;

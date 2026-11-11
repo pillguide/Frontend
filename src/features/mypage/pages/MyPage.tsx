@@ -16,7 +16,7 @@ import WeeklySummaryCard from "../components/WeeklySummaryCard";
 export default function MyPage() {
   const data = myPageMockData;
   const navigate = useNavigate();
-  const { profile } = useUser();
+  const { profile, loading, error } = useUser();
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [logoutError, setLogoutError] = useState(false);
 
@@ -41,11 +41,11 @@ export default function MyPage() {
       <div className="bg-gradient-to-b from-primary-50/70 to-transparent px-5 pb-5 pt-8">
         <div className="flex items-center gap-4">
           <div className="flex size-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-400 text-2xl font-bold text-white shadow-card">
-            {profile.name.slice(0, 1)}
+            {profile.name.slice(0, 1) || "•"}
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-2xl font-bold text-slate-900">
-              {profile.name}님
+              {loading ? "불러오는 중..." : error ? "정보를 불러오지 못했어요" : profile.name ? `${profile.name}님` : "내 정보"}
             </h1>
             <p className="text-sm text-slate-500">오늘도 건강하세요!</p>
           </div>

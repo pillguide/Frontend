@@ -153,7 +153,7 @@ export default function ScanResultPage() {
                       </span>
                     )}
                   </div>
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1 break-words">
                     <p className="font-semibold">
                       검출 {d.detectionIndex ?? index + 1}: {d.name}
                     </p>
