@@ -1,4 +1,4 @@
-// 약 검색·상세 (Backend: /api/v1/drugs) — 로그인 없이 사용 가능
+// 약 검색·상세 (Backend: /api/v1/drugs) — 로그인 필요
 import { api } from "../../../api/http";
 
 export interface DrugSearchItem {

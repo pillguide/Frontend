@@ -18,7 +18,7 @@ before(async () => {
   };
   server = await createServer({
     configFile: false,
-    server: { middlewareMode: true },
+    server: { middlewareMode: true, ws: false },
     optimizeDeps: { noDiscovery: true, include: [] },
     appType: 'custom',
   });

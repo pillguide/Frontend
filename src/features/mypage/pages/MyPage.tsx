@@ -5,6 +5,7 @@ import { useState } from "react";
 import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES } from "../../../constants/routes";
 import { authStorage } from "../../../utils/authStorage";
+import { scanDraft } from "../../medicine/scanDraft";
 import { logout } from "../../auth/api/authApi";
 import { useUser } from "../../user/context/UserContext";
 import { myPageMockData } from "../mock/mypage.mock";
@@ -25,6 +26,7 @@ export default function MyPage() {
     setLogoutError(false);
     try {
       await logout();
+      scanDraft.clear();
       authStorage.clear();
       navigate(ROUTES.LOGIN, { replace: true });
     } catch {
@@ -42,7 +44,9 @@ export default function MyPage() {
             {profile.name.slice(0, 1)}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-2xl font-bold text-slate-900">{profile.name}님</h1>
+            <h1 className="truncate text-2xl font-bold text-slate-900">
+              {profile.name}님
+            </h1>
             <p className="text-sm text-slate-500">오늘도 건강하세요!</p>
           </div>
           <button
@@ -58,10 +62,19 @@ export default function MyPage() {
       <div className="space-y-5 px-5 pb-8">
         <WeeklySummaryCard onClick={() => navigate(ROUTES.CHECK_RECORD)} />
         <QuickActionButtons actions={data.quickActions} />
-        <MenuList menus={data.menus} />
+        <MenuList
+          menus={[
+            { id: 0, label: "내 약", path: ROUTES.MY_DRUGS },
+            ...data.menus,
+          ]}
+        />
 
         <div className="flex flex-col items-center gap-2 pt-2">
-          {logoutError && <p role="alert" className="text-sm text-red-500">로그아웃에 실패했어요. 다시 시도해 주세요.</p>}
+          {logoutError && (
+            <p role="alert" className="text-sm text-red-500">
+              로그아웃에 실패했어요. 다시 시도해 주세요.
+            </p>
+          )}
           <button
             type="button"
             onClick={handleLogout}

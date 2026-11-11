@@ -1,28 +1,66 @@
-// 스캔 기록 (Backend: /api/v1/scan) — 로그인 필요
-import { api } from "../../../api/http";
+import { api, apiRequest } from "../../../api/http";
 
 export interface ScanSessionSummary {
   sessionId: number;
-  scannedAt: string; // ISO date-time
+  scannedAt: string;
   drugCount: number;
 }
-
 export interface ScanDrugSummary {
   drugId: number;
   name: string;
-  code: string; // 식약처 품목기준코드(item_seq)
+  code: string;
   imageUrl: string | null;
+  detectionId: number | null;
+  detectionIndex: number | null;
+  confidence: number | null;
+  bboxXyxy: number[] | null;
+  recognitionMayBeDegraded: boolean | null;
+  infoStatus: string | null;
+  authorizationStatus: string | null;
+  representativeImageStatus: string | null;
 }
-
+export interface Combination {
+  uniqueDrugCount: number;
+  pairCount: number;
+  confirmedContraindicationCount: number;
+  coverageStatus: string;
+  sourceAsOf: string | null;
+  refreshDelayed: boolean;
+  matches: {
+    firstName: string;
+    secondName: string;
+    evidenceType: string;
+    officialReason: string | null;
+    summary: string | null;
+    sourceAsOf: string | null;
+  }[];
+}
 export interface ScanSessionDetail {
   sessionId: number;
   scannedAt: string;
+  drugCount: number;
   drugs: ScanDrugSummary[];
+  legacy: boolean;
+  requestId: string | null;
+  imageSize: { width: number; height: number } | null;
+  modelSha256: string | null;
+  mappingSha256: string | null;
+  referenceVersion: string | null;
+  combination: Combination | null;
+  userImageAvailable: boolean;
+  imageComparisonStatus: string;
 }
-
 export const scanApi = {
   list: () => api.get<ScanSessionSummary[]>("/api/v1/scan"),
-  detail: (sessionId: number) => api.get<ScanSessionDetail>(`/api/v1/scan/${sessionId}`),
-  /** 인식된 약(item_seq 목록)을 스캔 기록으로 저장하고 sessionId를 돌려준다. AI 서버 연동 후 사용 */
-  save: (itemSeqList: string[]) => api.post<number>("/api/v1/scan", { itemSeqList }),
+  detail: (id: number) => api.get<ScanSessionDetail>(`/api/v1/scan/${id}`),
+  scan: (file: File, requestId: string, signal?: AbortSignal) => {
+    const body = new FormData();
+    body.append("file", file);
+    body.append("requestId", requestId);
+    return apiRequest<ScanSessionDetail>("/api/v1/scan", {
+      method: "POST",
+      body,
+      signal,
+    });
+  },
 };
