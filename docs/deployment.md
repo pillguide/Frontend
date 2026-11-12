@@ -18,3 +18,11 @@ Backend CI maps Backend `develop` to `manifest/main:dev/deployment.yaml` and Bac
 ## Build checks
 
 Use Node.js 24 and run `npm ci`, then `npm run verify`. Verification runs ESLint, dependency-free Node tests for environment routing and proxy response headers, then the existing TypeScript/Vite build. `vercel.ts` sets the same command for Vercel builds, so a failed check stops that deployment. Push deployment behavior and branch targets remain unchanged; no manual approval is required.
+
+## Push notifications (FCM)
+
+Medication reminders are delivered with Firebase Cloud Messaging web push. Set these Vercel environment variables for both Production and Preview (values are on the team Notion `FCM` page; they are public client values, not secrets):
+
+`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`, `VITE_FIREBASE_VAPID_KEY`.
+
+Without them the app still works but the reminder screen cannot request a push token. `public/firebase-messaging-sw.js` loads the Firebase compat SDK from gstatic; keep its `FIREBASE_VERSION` in step with the `firebase` package version. For local development copy `.env.example` to `.env.local`.

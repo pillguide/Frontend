@@ -8,6 +8,8 @@ import { useUser } from "../../user/context/UserContext";
 import maleIcon from "../../../assets/남자.png";
 import femaleIcon from "../../../assets/여자.png";
 import { fontScaleStorage, type FontScale } from "../../../utils/fontScale";
+import toast from "react-hot-toast";
+import { authStorage } from "../../../utils/authStorage";
 
 type Step = "NAME" | "GENDER_BIRTH" | "EMAIL" | "FONT_SIZE" | "DONE";
 
@@ -28,6 +30,8 @@ export default function ProfileOnboardingPage() {
     email: "",
   });
 
+  const [submitting, setSubmitting] = useState(false);
+
   // 글자 크기 상태(기본값은 storage에서)
   const [fontScale, setFontScale] = useState<FontScale>(() => fontScaleStorage.get());
 
@@ -45,8 +49,26 @@ export default function ProfileOnboardingPage() {
     fontScaleStorage.set(scale);
   };
 
+  // 성별·생년월일·이메일은 서버에 저장 (이름·글자 크기는 아직 서버 항목이 없어 기기에만 저장)
+  const submit = async () => {
+    if (!form.gender) return;
+    if (!authStorage.isLoggedIn()) { toast.error("로그인이 필요합니다."); return; }
+    setSubmitting(true);
+    try {
+      await updateProfile({ ...form, name: form.name.trim(), email: form.email.trim() });
+    } catch {
+      toast.error("정보를 저장하지 못했어요");
+      return;
+    } finally { setSubmitting(false); }
+    setStep("DONE");
+  };
+
   const next = () => {
-    if (!canNext) return;
+    if (!canNext || submitting) return;
+    if (step === "FONT_SIZE") {
+      void submit();
+      return;
+    }
 
     setStep((prev) => {
       if (prev === "NAME") return "GENDER_BIRTH";
@@ -68,9 +90,9 @@ export default function ProfileOnboardingPage() {
 
   // 버튼 문구
   const bottomButtonText = useMemo(() => {
-    if (step === "FONT_SIZE") return "회원가입";
+    if (step === "FONT_SIZE") return submitting ? "가입 중..." : "회원가입";
     return "다음";
-  }, [step]);
+  }, [step, submitting]);
 
   return (
     <MobileLayout showBottomNav={false}>
@@ -198,10 +220,7 @@ export default function ProfileOnboardingPage() {
             {/*  홈으로 */}
             <button
               type="button"
-              onClick={() => {
-                updateProfile({ ...form, name: form.name.trim(), email: form.email.trim() });
-                navigate(ROUTES.HOME, { replace: true });
-              }}
+              onClick={() => navigate(ROUTES.HOME, { replace: true })}
               className="mt-6 w-full h-14 rounded-2xl bg-primary text-white font-semibold"
             >
               시작하기

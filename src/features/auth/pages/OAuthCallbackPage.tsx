@@ -1,29 +1,34 @@
 // src/features/auth/pages/OAuthCallbackPage.tsx
-import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES } from "../../../constants/routes";
 import { authStorage } from "../../../utils/authStorage";
+import { exchangeOAuthCode, OAUTH_EXCHANGE_VERIFIER_KEY } from "../api/authApi";
 
 export default function OAuthCallbackPage() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const started = useRef(false);
 
   useEffect(() => {
-    const accessToken = searchParams.get("accessToken");
-    const refreshToken = searchParams.get("refreshToken");
-    const profileCompleted = searchParams.get("profileCompleted"); // "true" | "false" | null
-
-    if (!accessToken || !refreshToken) {
-      navigate(`${ROUTES.LOGIN}?error=missing_token`, { replace: true });
+    if (started.current) return; // StrictMode reruns effects; the exchange code is single-use.
+    started.current = true;
+    const code = new URLSearchParams(window.location.search).get("code");
+    window.history.replaceState(window.history.state, "", ROUTES.OAUTH_CALLBACK);
+    const verifier = sessionStorage.getItem(OAUTH_EXCHANGE_VERIFIER_KEY);
+    if (!code || !verifier) {
+      sessionStorage.removeItem(OAUTH_EXCHANGE_VERIFIER_KEY);
+      navigate(`${ROUTES.LOGIN}?error=missing_exchange`, { replace: true });
       return;
     }
-
-    authStorage.setTokens(accessToken, refreshToken);
-
-    // 추가 정보(이름·성별·생일·이메일·글자 크기)를 아직 입력 안 했으면 회원가입 단계로
-    navigate(profileCompleted === "true" ? ROUTES.HOME : ROUTES.SIGNUP, { replace: true });
-  }, [searchParams, navigate]);
+    void exchangeOAuthCode(code, verifier)
+      .then(({ accessToken, refreshToken }) => {
+        authStorage.setTokens(accessToken, refreshToken);
+        navigate(ROUTES.HOME, { replace: true });
+      })
+      .catch(() => navigate(`${ROUTES.LOGIN}?error=exchange_failed`, { replace: true }))
+      .finally(() => sessionStorage.removeItem(OAUTH_EXCHANGE_VERIFIER_KEY));
+  }, [navigate]);
 
   return (
     <MobileLayout showBottomNav={false}>

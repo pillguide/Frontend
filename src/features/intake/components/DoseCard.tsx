@@ -37,7 +37,7 @@ export default function DoseCard({ dose, disabled, onToggle }: DoseCardProps) {
         }`}
       >
         {disabled ? (
-          "예정"
+          taken ? "복용 완료" : "미완료"
         ) : taken ? (
           <>
             <Check size={16} strokeWidth={3} /> 복용 완료

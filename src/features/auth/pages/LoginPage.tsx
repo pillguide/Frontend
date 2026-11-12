@@ -1,11 +1,13 @@
 // src/features/auth/pages/LoginPage.tsx
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
 import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES } from "../../../constants/routes";
 import logo from "../../../assets/약학다식 로고.png";
 import kakaoIcon from "../../../assets/카카오톡로고.png";
 import naverIcon from "../../../assets/네이버로고.png";
 import googleIcon from "../../../assets/구글.svg";
+import { createOAuthVerifierAndChallenge, OAUTH_EXCHANGE_VERIFIER_KEY } from "../api/authApi";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? "" : "http://localhost:8080");
 
@@ -26,9 +28,17 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const error = searchParams.get("error");
+  const [loginError, setLoginError] = useState(false);
 
-  const moveToOAuth = (provider: Provider) => {
-    window.location.assign(`${API_BASE_URL}/api/v1/oauth2/authorize/${provider}`);
+  const moveToOAuth = async (provider: Provider) => {
+    try {
+      setLoginError(false);
+      const { verifier, challenge } = await createOAuthVerifierAndChallenge();
+      sessionStorage.setItem(OAUTH_EXCHANGE_VERIFIER_KEY, verifier);
+      window.location.assign(`${API_BASE_URL}/api/v1/oauth2/authorize/${provider}?exchange_challenge=${challenge}`);
+    } catch {
+      setLoginError(true);
+    }
   };
 
   return (
@@ -49,7 +59,7 @@ export default function LoginPage() {
           </h1>
         </div>
 
-        {error && (
+        {(error || loginError) && (
           <p className="mt-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-500">
             로그인에 실패했어요. 다시 시도해 주세요.
           </p>
@@ -67,7 +77,7 @@ export default function LoginPage() {
             <button
               key={id}
               type="button"
-              onClick={() => moveToOAuth(id)}
+              onClick={() => { void moveToOAuth(id); }}
               className={`relative flex h-[52px] w-full items-center justify-center rounded-full text-base font-medium shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition active:scale-[0.99] ${className}`}
             >
               <span className="absolute left-4 flex size-8 items-center justify-center">

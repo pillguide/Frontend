@@ -1,5 +1,5 @@
 // src/features/medicine/components/MedicineItemRow.tsx
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Pill } from "lucide-react";
 import type { MedicineItem } from "../types/medicine";
 
 interface MedicineItemRowProps {
@@ -13,24 +13,26 @@ export default function MedicineItemRow({ medicine, onClick }: MedicineItemRowPr
       onClick={onClick}
       className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
     >
-      <div className="flex items-center gap-3">
-        <img
-          src={medicine.imageUrl}
-          alt={medicine.name}
-          className="h-12 w-12 object-contain"
-        />
-        <div>
+      <div className="flex min-w-0 items-center gap-3">
+        {medicine.imageUrl ? (
+          <img src={medicine.imageUrl} alt={medicine.name} className="h-12 w-12 object-contain" />
+        ) : (
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50">
+            <Pill size={22} className="text-slate-300" />
+          </span>
+        )}
+        <div className="min-w-0">
           {medicine.warning && (
             <span className="inline-block rounded-full border border-red-300 px-3 py-1 text-xs text-red-500">
               {medicine.warning}
             </span>
           )}
-          <p className="mt-1 text-base font-medium text-slate-900">
+          <p className="mt-1 break-words text-base font-medium text-slate-900">
             {medicine.name}
           </p>
         </div>
       </div>
-      <ChevronRight size={18} className="text-slate-400" />
+      <ChevronRight size={18} className="shrink-0 text-slate-400" />
     </button>
   );
 }

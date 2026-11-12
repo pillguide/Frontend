@@ -49,14 +49,14 @@ export default function MedicationChecklist({ doses, onToggle, onOpen, onManage,
             <div key={group.label}>
               <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{group.label}</p>
               <div className="overflow-hidden rounded-[24px] bg-white shadow-card">
-                {group.items.map(({ alarm, taken }, i) => (
+                {group.items.map(({ alarm, taken, doseId }, i) => (
                   <div
-                    key={alarm.id}
+                    key={doseId}
                     className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-slate-100" : ""}`}
                   >
                     <button
                       type="button"
-                      onClick={() => onToggle(alarm.id)}
+                      onClick={() => onToggle(doseId)}
                       aria-pressed={taken}
                       aria-label={`${alarm.medicineName} ${taken ? "복용 취소" : "복용 완료"}`}
                       className={`flex size-11 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${

@@ -4,6 +4,7 @@ export const ROUTES = {
   SIGNUP: "/signup",
   OAUTH_CALLBACK: "/oauth/callback",
   SEARCH: "/search",
+  MY_DRUGS: "/mypage/drugs",
   MY_PAGE: "/mypage",
   PROFILE: "/mypage/profile",
   CHECK_RECORD: "/mypage/check",
@@ -11,9 +12,15 @@ export const ROUTES = {
   ALARM_NEW: "/mypage/alarm/new",
   ALARM_EDIT: "/mypage/alarm/:id",
   SCAN: "/scan",
+  SCAN_RESULT: "/scan/result",
+  SCAN_RESULT_MEDICINE: "/scan/result/medicine/:id",
   SCAN_RECORD: "/scan-record",
   MEDICINE_DETAIL: "/medicine",
   SINGLE_MEDICINE: "/medicine/single/:id",
 };
+
+export const singleMedicinePath = (drugId: number) =>
+  `/medicine/single/${drugId}`;
+export const scanSessionPath = (sessionId: number) => `/medicine/${sessionId}`;
 
 export const alarmEditPath = (id: number) => `/mypage/alarm/${id}`;

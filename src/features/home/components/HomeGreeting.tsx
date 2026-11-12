@@ -28,7 +28,7 @@ export default function HomeGreeting({ userName, now }: HomeGreetingProps) {
         <h1 className="mt-1 text-2xl font-bold leading-snug text-slate-900">
           {greeting(now.getHours())},
           <br />
-          {userName}님
+          {userName ? `${userName}님` : "반가워요"}
         </h1>
       </div>
       <button
