@@ -24,6 +24,13 @@ export interface DrugDetail {
   sideEffects: string | null;
   dosageMethod: string | null;
   storageMethod: string | null;
+  reference?: {
+    code: string;
+    infoStatus: string | null;
+    authorizationStatus: string | null;
+    sourceAsOf: string | null;
+    representativeImageStatus: string | null;
+  };
 }
 
 export const drugApi = {

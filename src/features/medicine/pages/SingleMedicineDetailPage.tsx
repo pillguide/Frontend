@@ -1,7 +1,7 @@
 // src/features/medicine/pages/SingleMedicineDetailPage.tsx
 import { useEffect, useState } from "react";
 import { ChevronDown, Bell } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import * as Accordion from "@radix-ui/react-accordion";
 import MobileLayout from "../../../layout/MobileLayout";
 import MedicineHero from "../components/MedicineHero";
@@ -11,6 +11,9 @@ import PageHeader from "../../../components/common/PageHeader";
 import { ROUTES } from "../../../constants/routes";
 import { drugApi } from "../api/drugApi";
 import { toTextItems } from "../utils/drugText";
+import ReferenceComparison from "../components/ReferenceComparison";
+import { scanDraft, useScanDraft } from "../scanDraft";
+import { infoStatusLabel, authorizationStatusLabel } from "../utils/referenceLabels";
 
 /** 서버 약 상세 → 화면 모델 */
 async function loadFromApi(id: number): Promise<SingleMedicineDetail> {
@@ -19,6 +22,7 @@ async function loadFromApi(id: number): Promise<SingleMedicineDetail> {
     id: d.drugId,
     name: d.name,
     imageUrl: d.imageUrl,
+    reference: d.reference,
     tags: [],
     effects: toTextItems(d.effect),
     sideEffects: toTextItems(d.sideEffects),
@@ -35,6 +39,11 @@ interface Props {
 export default function SingleMedicineDetailPage({ source = "api" }: Props) {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [params] = useSearchParams();
+  const draft = useScanDraft();
+  const detectionId = params.get("detectionId");
+  const detection = detectionId ? draft.result?.drugs.find((d) =>
+    d.drugId === Number(id) && d.detectionId !== null && String(d.detectionId) === detectionId) : undefined;
   const [state, setState] = useState<{ id?: string; data?: SingleMedicineDetail; error?: string }>({});
 
   useEffect(() => {
@@ -83,7 +92,28 @@ export default function SingleMedicineDetailPage({ source = "api" }: Props) {
           name={data.name}
           imageUrl={data.imageUrl}
           tags={data.tags}
+          hideImage={source === "api"}
         />
+
+        {source === "api" && <>
+          <ReferenceComparison drugId={data.id} imageUrl={data.imageUrl}
+            ready={data.reference?.representativeImageStatus === "READY"}
+            preview={detection ? draft.preview : null} detection={detection}
+            imageSize={draft.result?.imageSize ?? null} />
+          {data.reference && <p className="mb-4 text-xs text-slate-500">
+            자료: {infoStatusLabel(data.reference.infoStatus)} · 허가: {authorizationStatusLabel(data.reference.authorizationStatus)}
+            {data.reference.sourceAsOf && ` · 기준일 ${data.reference.sourceAsOf}`}
+          </p>}
+          {detection && <div className="mb-4 grid grid-cols-2 gap-2">
+            <button type="button" className="rounded-xl border p-3 text-sm" onClick={() => {
+              scanDraft.setSelected(draft.selected.filter((selected) => selected !== detection.detectionId));
+              navigate(ROUTES.SCAN_RESULT);
+            }}>이 검출 저장에서 제외</button>
+            <button type="button" className="rounded-xl border p-3 text-sm" onClick={() => {
+              scanDraft.clear(); navigate(ROUTES.SCAN);
+            }}>다시 촬영</button>
+          </div>}
+        </>}
 
         {/* Primary CTA */}
         <button

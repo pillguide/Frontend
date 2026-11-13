@@ -6,12 +6,13 @@ interface MedicineHeroProps {
   name: string;
   imageUrl?: string | null;
   tags: MedicineTag[];
+  hideImage?: boolean;
 }
 
-export default function MedicineHero({ name, imageUrl, tags }: MedicineHeroProps) {
+export default function MedicineHero({ name, imageUrl, tags, hideImage = false }: MedicineHeroProps) {
   return (
     <div className="flex flex-col items-center px-4 pt-6 pb-4">
-      {imageUrl ? (
+      {hideImage ? null : imageUrl ? (
         <img src={imageUrl} alt={name} className="mb-4 h-28 w-28 object-contain" />
       ) : (
         <div className="mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-slate-100">
