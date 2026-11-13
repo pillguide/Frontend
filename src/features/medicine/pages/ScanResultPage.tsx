@@ -10,6 +10,7 @@ import {
   authorizationStatusLabel,
 } from "../utils/referenceLabels";
 import CombinationSummary from "../components/CombinationSummary";
+import RepresentativePhoto from "../components/RepresentativePhoto";
 
 export default function ScanResultPage() {
   const navigate = useNavigate();
@@ -139,19 +140,8 @@ export default function ScanResultPage() {
                     }}
                   />
                   <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-xl bg-[#f4f5f9]">
-                    {d.imageUrl && d.representativeImageStatus === "READY" ? (
-                      <img
-                        src={d.imageUrl}
-                        alt="데이터셋 대표 이미지"
-                        className="h-full w-full rounded-xl object-contain"
-                      />
-                    ) : (
-                      <span className="text-center text-[10px] text-slate-500">
-                        대표 이미지
-                        <br />
-                        준비 중
-                      </span>
-                    )}
+                    <RepresentativePhoto key={`${d.drugId}:${d.imageUrl}`} drugId={d.drugId}
+                      url={d.imageUrl} ready={d.representativeImageStatus === "READY"} />
                   </div>
                   <div className="min-w-0 flex-1 break-words">
                     <p className="font-semibold">
@@ -173,9 +163,10 @@ export default function ScanResultPage() {
                     )}
                     <button
                       className="mt-2 text-sm text-primary underline"
-                      onClick={() => navigate(singleMedicinePath(d.drugId))}
+                      onClick={() => navigate(singleMedicinePath(d.drugId) +
+                        (d.detectionId === null ? "" : `?detectionId=${d.detectionId}`))}
                     >
-                      현재 약 상세 보기
+                      사진 비교·현재 약 상세 보기
                     </button>
                   </div>
                 </div>
@@ -186,7 +177,7 @@ export default function ScanResultPage() {
               <CombinationSummary combination={result.combination} />
             </div>
             <p className="text-sm text-slate-500">
-              사진과 대표 이미지 비교 화면은 준비 중이에요.
+              각 약의 상세에서 촬영한 영역과 대표 이미지를 참고할 수 있어요.
             </p>
             {error && (
               <p role="alert" className="text-sm text-red-600">

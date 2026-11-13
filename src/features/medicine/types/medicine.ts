@@ -32,6 +32,7 @@ export interface SingleMedicineDetail {
   id: number;
   name: string;
   imageUrl: string | null;
+  reference?: import("../api/drugApi").DrugDetail["reference"];
   tags: MedicineTag[];
   effects: string[];        // 주요 효능 (항상 펼침)
   sideEffects: string[];    // 부작용
