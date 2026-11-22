@@ -9,10 +9,12 @@ interface ConfirmDialogProps {
   cancelLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** danger: 삭제처럼 되돌릴 수 없는 확인 버튼을 빨간색으로 */
+  tone?: "default" | "danger";
 }
 
 export default function ConfirmDialog({
-  open, title, message, confirmLabel, cancelLabel, onConfirm, onCancel,
+  open, title, message, confirmLabel, cancelLabel, onConfirm, onCancel, tone = "default",
 }: ConfirmDialogProps) {
   return (
     <AnimatePresence>
@@ -43,7 +45,9 @@ export default function ConfirmDialog({
               <button
                 type="button"
                 onClick={onConfirm}
-                className="flex-1 rounded-2xl border border-primary py-3 font-bold text-primary"
+                className={`flex-1 rounded-2xl border py-3 font-bold ${
+                  tone === "danger" ? "border-red-200 text-red-500" : "border-primary text-primary"
+                }`}
               >
                 {confirmLabel}
               </button>

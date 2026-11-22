@@ -1,168 +1,147 @@
-// src/features/medicine/pages/SingleMedicineDetailPage.tsx
+// 약 정보: 검색·내 약에서 들어오는 약 상세 (GET /api/v1/drugs/{drugId})
 import { useEffect, useState } from "react";
-import { ChevronDown, Bell } from "lucide-react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Bell, ChevronDown, Pill } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import * as Accordion from "@radix-ui/react-accordion";
 import MobileLayout from "../../../layout/MobileLayout";
-import MedicineHero from "../components/MedicineHero";
-import { getSingleMedicine } from "../mock/medicine.mock";
-import type { SingleMedicineDetail } from "../types/medicine";
 import PageHeader from "../../../components/common/PageHeader";
 import { ROUTES } from "../../../constants/routes";
-import { useScanSheet } from "../context/scanSheet";
-import { drugApi } from "../api/drugApi";
+import { drugApi, type DrugDetail } from "../api/drugApi";
 import { toTextItems } from "../utils/drugText";
-import ReferenceComparison from "../components/ReferenceComparison";
-import { scanDraft, useScanDraft } from "../scanDraft";
-import { infoStatusLabel, authorizationStatusLabel } from "../utils/referenceLabels";
+import RepresentativePhoto from "../components/RepresentativePhoto";
 
-/** 서버 약 상세 → 화면 모델 */
-async function loadFromApi(id: number): Promise<SingleMedicineDetail> {
-  const d = await drugApi.detail(id);
-  return {
-    id: d.drugId,
-    name: d.name,
-    imageUrl: d.imageUrl,
-    reference: d.reference,
-    tags: [],
-    effects: toTextItems(d.effect),
-    sideEffects: toTextItems(d.sideEffects),
-    usage: toTextItems(d.dosageMethod),
-    storage: toTextItems(d.storageMethod),
-  };
-}
+/** 효능은 처음 이만큼만 보여주고 나머지는 더 보기로 */
+const EFFECT_PREVIEW = 3;
 
-interface Props {
-  /** "mock": 스캔 결과 데모 화면에서 들어온 경우 (AI 연동 전) */
-  source?: "api" | "mock";
-}
-
-export default function SingleMedicineDetailPage({ source = "api" }: Props) {
+export default function SingleMedicineDetailPage() {
   const navigate = useNavigate();
-  const openScanSheet = useScanSheet();
   const { id } = useParams();
-  const [params] = useSearchParams();
-  const draft = useScanDraft();
-  const detectionId = params.get("detectionId");
-  const detection = detectionId ? draft.result?.drugs.find((d) =>
-    d.drugId === Number(id) && d.detectionId !== null && String(d.detectionId) === detectionId) : undefined;
-  const [state, setState] = useState<{ id?: string; data?: SingleMedicineDetail; error?: string }>({});
+  const [state, setState] = useState<{ id?: string; data?: DrugDetail; error?: boolean }>({});
+  const [showAllEffects, setShowAllEffects] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    const load = source === "mock" ? getSingleMedicine(Number(id)) : loadFromApi(Number(id));
-    load
+    drugApi
+      .detail(Number(id))
       .then((data) => {
         if (!cancelled) setState({ id, data });
       })
-      .catch((e: unknown) => {
-        if (!cancelled) setState({ id, error: e instanceof Error ? e.message : "약 정보를 불러오지 못했어요" });
+      .catch(() => {
+        if (!cancelled) setState({ id, error: true });
       });
     return () => {
       cancelled = true;
     };
-  }, [id, source]);
+  }, [id]);
 
   const data = state.id === id ? state.data : undefined;
-  const error = state.id === id ? state.error : undefined;
+  const error = state.id === id && state.error;
 
   if (!data) {
     return (
       <MobileLayout>
-        <PageHeader title="약 정보" showBack={true} />
-        <div className="p-6 text-center text-slate-500">{error ?? "불러오는 중..."}</div>
+        <PageHeader title="약 정보" />
+        <p className="p-6 text-center text-sm text-slate-500">
+          {error ? "약 정보를 불러오지 못했어요" : "불러오는 중..."}
+        </p>
       </MobileLayout>
     );
   }
 
+  const effects = toTextItems(data.effect);
   const sections = [
-    { value: "side-effects", title: "부작용", items: data.sideEffects },
-    { value: "usage", title: "복용 방법", items: data.usage },
-    { value: "storage", title: "보관 방법", items: data.storage },
+    { value: "side-effects", title: "부작용", items: toTextItems(data.sideEffects) },
+    { value: "usage", title: "복용 방법", items: toTextItems(data.dosageMethod) },
+    { value: "storage", title: "보관 방법", items: toTextItems(data.storageMethod) },
   ].filter((section) => section.items.length > 0);
-  const empty = <li className="text-slate-400">등록된 정보가 없어요</li>;
+  const classification = data.reference?.classificationName;
+  const ingredient = data.reference?.ingredientDisplay;
+  const imageReady = data.reference?.representativeImageStatus === "READY" && !!data.imageUrl;
+  const card = "rounded-[20px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]";
 
   return (
     <MobileLayout>
-      {/* Header */}
-      <PageHeader title="약 정보" showBack={true} />
+      <PageHeader title="약 정보" />
+      <div className="space-y-3 bg-[#f4f5f9] px-4 pb-8 pt-6">
+        <div className="flex flex-col items-center">
+          <span className="mb-4 flex size-28 items-center justify-center overflow-hidden rounded-3xl bg-white">
+            {imageReady ? (
+              <RepresentativePhoto key={`${data.drugId}:${data.imageUrl}`} drugId={data.drugId} url={data.imageUrl} ready />
+            ) : (
+              <Pill size={40} className="text-slate-300" />
+            )}
+          </span>
+          <h2 className="max-w-full break-words text-center text-xl font-bold text-slate-900">{data.name}</h2>
+          {(classification || ingredient) && (
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              {classification && (
+                <span className="rounded-full bg-slate-200/70 px-3 py-1 text-xs text-slate-700">{classification}</span>
+              )}
+              {ingredient && (
+                <span className="rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-700">{ingredient}</span>
+              )}
+            </div>
+          )}
+        </div>
 
-      {/* Content */}
-      <div className="px-4 pb-6">
-        <MedicineHero
-          name={data.name}
-          imageUrl={data.imageUrl}
-          tags={data.tags}
-          hideImage={source === "api"}
-        />
-
-        {source === "api" && <>
-          <ReferenceComparison drugId={data.id} imageUrl={data.imageUrl}
-            ready={data.reference?.representativeImageStatus === "READY"}
-            preview={detection ? draft.preview : null} detection={detection}
-            imageSize={draft.result?.imageSize ?? null} />
-          {data.reference && <p className="mb-4 text-xs text-slate-500">
-            자료: {infoStatusLabel(data.reference.infoStatus)} · 허가: {authorizationStatusLabel(data.reference.authorizationStatus)}
-            {data.reference.sourceAsOf && ` · 기준일 ${data.reference.sourceAsOf}`}
-          </p>}
-          {detection && <div className="mb-4 grid grid-cols-2 gap-2">
-            <button type="button" className="rounded-xl border p-3 text-sm" onClick={() => {
-              scanDraft.setSelected(draft.selected.filter((selected) => selected !== detection.detectionId));
-              navigate(ROUTES.SCAN_RESULT);
-            }}>이 검출 저장에서 제외</button>
-            <button type="button" className="rounded-xl border p-3 text-sm" onClick={openScanSheet}>다시 촬영</button>
-          </div>}
-        </>}
-
-        {/* Primary CTA */}
         <button
+          type="button"
           onClick={() => navigate(`${ROUTES.ALARM_NEW}?name=${encodeURIComponent(data.name)}`)}
-          className="mb-4 flex h-12 w-full items-center justify-center gap-1 rounded-xl bg-[#534AB7] font-medium text-white"
+          className="flex h-12 w-full items-center justify-center gap-1.5 rounded-2xl bg-primary font-bold text-white"
         >
           <Bell size={18} />
           복약 알림 설정하기
         </button>
 
-        {/* Always-expanded: 주요 효능 */}
-        <div className="mb-3 rounded-xl bg-white p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-          <h3 className="mb-3 text-base font-bold text-slate-900">주요 효능</h3>
-          <ul className="space-y-2 text-sm text-slate-700">
-            {data.effects.length === 0
-              ? empty
-              : data.effects.map((item, idx) => <li key={idx}>• {item}</li>)}
-          </ul>
-        </div>
-
-        {/* Accordion: one open at a time */}
-        <Accordion.Root type="single" collapsible className="space-y-3">
-          {sections.map((section) => (
-            <Accordion.Item
-              key={section.value}
-              value={section.value}
-              className="overflow-hidden rounded-xl bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
-            >
-              <Accordion.Header>
-                <Accordion.Trigger className="group flex w-full items-center justify-between p-4 text-left hover:bg-slate-50">
-                  <span className="text-base font-bold text-slate-900">
-                    {section.title}
-                  </span>
-                  <ChevronDown
-                    size={20}
-                    className="text-slate-400 transition-transform duration-200 group-data-[state=open]:rotate-180"
-                  />
-                </Accordion.Trigger>
-              </Accordion.Header>
-              <Accordion.Content className="overflow-hidden text-sm text-slate-700 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                <ul className="space-y-2 px-4 pb-4">
-                  {section.items.map((item, idx) => (
-                    <li key={idx}>• {item}</li>
+        {effects.length === 0 && sections.length === 0 ? (
+          <p className={`${card} p-5 text-center text-sm text-slate-400`}>등록된 약 정보가 없어요</p>
+        ) : (
+          <>
+            {effects.length > 0 && (
+              <section className={`${card} p-5`}>
+                <h3 className="mb-3 font-bold text-slate-900">주요 효능</h3>
+                <ul className="space-y-2 text-sm text-slate-700">
+                  {(showAllEffects ? effects : effects.slice(0, EFFECT_PREVIEW)).map((item, i) => (
+                    <li key={i}>• {item}</li>
                   ))}
                 </ul>
-              </Accordion.Content>
-            </Accordion.Item>
-          ))}
-        </Accordion.Root>
+                {effects.length > EFFECT_PREVIEW && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllEffects(!showAllEffects)}
+                    className="mt-3 text-sm font-bold text-primary"
+                  >
+                    {showAllEffects ? "접기" : "더 보기"}
+                  </button>
+                )}
+              </section>
+            )}
+
+            <Accordion.Root type="single" collapsible className="space-y-3">
+              {sections.map((section) => (
+                <Accordion.Item key={section.value} value={section.value} className={`${card} overflow-hidden`}>
+                  <Accordion.Header>
+                    <Accordion.Trigger className="group flex w-full items-center justify-between p-5 text-left">
+                      <span className="font-bold text-slate-900">{section.title}</span>
+                      <ChevronDown
+                        size={20}
+                        className="text-slate-400 transition-transform duration-200 group-data-[state=open]:rotate-180"
+                      />
+                    </Accordion.Trigger>
+                  </Accordion.Header>
+                  <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                    <ul className="space-y-2 px-5 pb-5 text-sm text-slate-700">
+                      {section.items.map((item, i) => (
+                        <li key={i}>• {item}</li>
+                      ))}
+                    </ul>
+                  </Accordion.Content>
+                </Accordion.Item>
+              ))}
+            </Accordion.Root>
+          </>
+        )}
       </div>
     </MobileLayout>
   );

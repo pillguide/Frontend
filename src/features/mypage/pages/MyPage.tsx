@@ -8,13 +8,18 @@ import { authStorage } from "../../../utils/authStorage";
 import { scanDraft } from "../../medicine/scanDraft";
 import { logout } from "../../auth/api/authApi";
 import { useUser } from "../../user/context/UserContext";
-import { myPageMockData } from "../mock/mypage.mock";
+import type { QuickAction } from "../types/mypage";
 import QuickActionButtons from "../components/QuickActionButtons";
 import MenuList from "../components/MenuList";
 import WeeklySummaryCard from "../components/WeeklySummaryCard";
 
+const QUICK_ACTIONS: QuickAction[] = [
+  { id: 1, label: "복약 알림 설정", path: ROUTES.ALARM, variant: "primary" },
+  { id: 2, label: "복약 체크 기록", path: ROUTES.CHECK_RECORD, variant: "secondary" },
+  { id: 3, label: "스캔기록", path: ROUTES.SCAN_RECORD, variant: "secondary" },
+];
+
 export default function MyPage() {
-  const data = myPageMockData;
   const navigate = useNavigate();
   const { profile, loading, error } = useUser();
   const [logoutBusy, setLogoutBusy] = useState(false);
@@ -61,13 +66,8 @@ export default function MyPage() {
 
       <div className="space-y-5 px-5 pb-8">
         <WeeklySummaryCard onClick={() => navigate(ROUTES.CHECK_RECORD)} />
-        <QuickActionButtons actions={data.quickActions} />
-        <MenuList
-          menus={[
-            { id: 0, label: "내 약", path: ROUTES.MY_DRUGS },
-            ...data.menus,
-          ]}
-        />
+        <QuickActionButtons actions={QUICK_ACTIONS} />
+        <MenuList menus={[{ id: 0, label: "내 약", path: ROUTES.MY_DRUGS }]} />
 
         <div className="flex flex-col items-center gap-2 pt-2">
           {logoutError && (
