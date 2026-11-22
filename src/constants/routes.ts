@@ -12,6 +12,7 @@ export const ROUTES = {
   ALARM_NEW: "/mypage/alarm/new",
   ALARM_EDIT: "/mypage/alarm/:id",
   SCAN: "/scan",
+  SCAN_CAMERA: "/scan/camera",
   SCAN_RESULT: "/scan/result",
   SCAN_RESULT_MEDICINE: "/scan/result/medicine/:id",
   SCAN_RECORD: "/scan-record",

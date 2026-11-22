@@ -2,6 +2,7 @@
 import { BellRing, CalendarCheck, ScanLine, Search, type LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../constants/routes";
+import { useScanSheet } from "../../medicine/context/scanSheet";
 
 const items: { label: string; to: string; icon: LucideIcon; className: string }[] = [
   { label: "약 스캔", to: ROUTES.SCAN, icon: ScanLine, className: "bg-primary-50 text-primary" },
@@ -12,6 +13,7 @@ const items: { label: string; to: string; icon: LucideIcon; className: string }[
 
 export default function QuickMenu() {
   const navigate = useNavigate();
+  const openScanSheet = useScanSheet();
 
   return (
     <nav aria-label="바로가기" className="grid grid-cols-4 gap-2 rounded-[24px] bg-white p-3 shadow-card">
@@ -19,7 +21,7 @@ export default function QuickMenu() {
         <button
           key={label}
           type="button"
-          onClick={() => navigate(to)}
+          onClick={() => (to === ROUTES.SCAN ? openScanSheet() : navigate(to))}
           className="flex flex-col items-center gap-1.5 rounded-2xl py-2 transition active:scale-95"
         >
           <span className={`flex size-12 items-center justify-center rounded-2xl ${className}`}>

@@ -15,6 +15,8 @@ import MyPage from "./features/mypage/pages/MyPage";
 import MyDrugsPage from "./features/medicine/pages/MyDrugsPage";
 import { scanDraft, isScanDraftRoute } from "./features/medicine/scanDraft";
 import ScanPage from "./features/medicine/pages/ScanPage";
+import ScanCameraPage from "./features/medicine/pages/ScanCameraPage";
+import { ScanSheetProvider } from "./features/medicine/context/ScanSheetContext";
 import ScanRecordPage from "./features/medicine/pages/ScanRecordPage";
 import ScanResultPage from "./features/medicine/pages/ScanResultPage";
 import ScanSessionPage from "./features/medicine/pages/ScanSessionPage";
@@ -78,6 +80,7 @@ function SessionApp() {
           <IntakeProvider>
             <PushSync />
             <ScanDraftBoundary />
+            <ScanSheetProvider>
             <Routes>
               {/* 인증 */}
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -91,6 +94,7 @@ function SessionApp() {
               <Route path={ROUTES.PROFILE} element={<Protected><ProfilePage /></Protected>} />
               <Route path={ROUTES.CHECK_RECORD} element={<Protected><CheckRecordPage /></Protected>} />
               <Route path={ROUTES.SCAN} element={<ScanPage />} />
+              <Route path={ROUTES.SCAN_CAMERA} element={<Protected><ScanCameraPage /></Protected>} />
               <Route path={ROUTES.SCAN_RECORD} element={<ScanRecordPage />} />
               <Route path={ROUTES.SCAN_RESULT} element={<ScanResultPage />} />
               <Route
@@ -108,6 +112,7 @@ function SessionApp() {
               <Route path={ROUTES.ALARM_NEW} element={<Protected><AlarmFormPage /></Protected>} />
               <Route path={ROUTES.ALARM_EDIT} element={<Protected><AlarmFormPage /></Protected>} />
             </Routes>
+            </ScanSheetProvider>
           </IntakeProvider>
         </AlarmProvider>
       </UserProvider>

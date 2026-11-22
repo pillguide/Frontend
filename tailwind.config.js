@@ -34,10 +34,21 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        // 분석 중 화면: 사진 위를 오르내리는 스캔 바
+        "scan-sweep": {
+          "0%": { transform: "translateY(-40px)" },
+          "100%": { transform: "translateY(240px)" },
+        },
+        "dot-blink": {
+          "0%, 60%, 100%": { opacity: "0.2" },
+          "30%": { opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "scan-sweep": "scan-sweep 1.8s ease-in-out infinite alternate",
+        "dot-blink": "dot-blink 1.2s infinite",
       },
       // tailwind.config.js의 theme.extend에 추가
       boxShadow: {
