@@ -1,6 +1,7 @@
 // 복약 알림 푸시(FCM) 권한·토큰 관리
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useIntake } from "../../intake/context/IntakeContext";
 import {
   getFcmToken,
   getPushPermission,
@@ -66,9 +67,10 @@ export function usePushNotifications() {
 /**
  * 앱 전체에서 한 번 실행:
  * - 알림이 허용된 기기면 로그인 계정에 최신 FCM 토큰을 다시 등록 (토큰은 바뀔 수 있음)
- * - 앱을 보고 있을 때 온 푸시는 토스트로 보여줌
+ * - 앱을 보고 있을 때 온 푸시는 복약 일정을 다시 불러와서 DoseAlarm 카드로 보여줌
  */
 export function usePushSync() {
+  const { refresh } = useIntake();
   useEffect(() => {
     if (!isFirebaseConfigured || getPushPermission() === "unsupported") return;
     if (getPushPermission() === "granted") {
@@ -81,9 +83,7 @@ export function usePushSync() {
 
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
-    onForegroundPush((title, body) => {
-      toast(`${title}\n${body}`, { icon: "💊", duration: 6000 });
-    }).then((off) => {
+    onForegroundPush(() => refresh()).then((off) => {
       if (cancelled) off();
       else unsubscribe = off;
     });
@@ -91,5 +91,5 @@ export function usePushSync() {
       cancelled = true;
       unsubscribe?.();
     };
-  }, []);
+  }, [refresh]);
 }
