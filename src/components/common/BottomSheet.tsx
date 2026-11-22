@@ -27,7 +27,7 @@ export default function BottomSheet({ open, onClose, title, children }: BottomSh
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className="absolute bottom-0 w-full max-w-[420px] rounded-t-[28px] bg-white px-5 pb-8 pt-3 shadow-2xl"
+            className="absolute bottom-0 w-full max-w-[420px] rounded-t-[28px] bg-white px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}

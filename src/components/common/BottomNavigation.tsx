@@ -13,8 +13,8 @@ const navItems = [
 export default function BottomNavigation() {
   const openScanSheet = useScanSheet();
   return (
-    // BottomNavigation.tsx
-<nav className="border-t border-slate-200 bg-white flex-shrink-0">
+    // 아이폰 홈 바(화면 아래 가로줄) 영역만큼 아래 여백
+<nav className="flex-shrink-0 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
       <div className="flex h-16 items-center justify-around px-4">
         {navItems.map(({ to, icon: Icon, center, label }) =>
           center ? (

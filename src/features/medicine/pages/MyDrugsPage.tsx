@@ -206,7 +206,7 @@ export default function MyDrugsPage() {
         </div>
 
         {editing && (
-          <div className="sticky bottom-0 border-t border-slate-100 bg-white px-4 pb-6 pt-3">
+          <div className="sticky bottom-0 border-t border-slate-100 bg-white px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3">
             <button
               type="button"
               disabled={!picked.length || removing}

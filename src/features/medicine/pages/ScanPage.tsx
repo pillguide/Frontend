@@ -50,7 +50,7 @@ export default function ScanPage() {
               <p className="mt-1 text-sm text-slate-500">{draft.error}</p>
             </section>
           </div>
-          <div className="space-y-2 px-4 pb-7 pt-4">
+          <div className="space-y-2 px-4 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4">
             <button
               type="button"
               onClick={openSheet}
