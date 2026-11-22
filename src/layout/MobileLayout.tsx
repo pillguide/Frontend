@@ -18,8 +18,9 @@ export default function MobileLayout({
   const location = useLocation();
 
   return (
-    // min-h-screen → h-screen 으로 변경
-    <div className="h-screen bg-[#f7f8fb] flex justify-center">
+    // h-dvh: 실제로 보이는 화면 높이. 아이폰 사파리의 100vh(h-screen)는 툴바가 숨었을 때 기준이라
+    // 하단바가 화면 아래로 밀려 잘림
+    <div className="h-dvh bg-[#f7f8fb] flex justify-center">
       {/* min-h-screen → h-full, overflow-hidden 유지 */}
       <div className="relative w-full max-w-[420px] h-full bg-slate-50 shadow-sm flex flex-col overflow-hidden">
         <AnimatePresence mode="wait">

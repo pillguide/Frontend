@@ -89,7 +89,7 @@ export default function ScanCameraPage() {
   const roundButton = "flex size-12 items-center justify-center rounded-full bg-white/15 text-white";
 
   return (
-    <div className="flex h-screen justify-center bg-black">
+    <div className="flex h-dvh justify-center bg-black">
       <div className="relative flex h-full w-full max-w-[420px] flex-col text-white">
         <header className="relative flex h-14 items-center justify-center">
           <button type="button" onClick={() => navigate(-1)} className="absolute left-3 p-2" aria-label="닫기">
@@ -131,7 +131,7 @@ export default function ScanCameraPage() {
           )}
         </div>
 
-        <div className="flex items-center justify-between px-8 pb-10 pt-6">
+        <div className="flex items-center justify-between px-8 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-6">
           <label className={`${roundButton} cursor-pointer`} aria-label="앨범에서 선택">
             <ImageIcon size={22} />
             <input type="file" accept="image/jpeg,image/png" onChange={pick} className="hidden" />

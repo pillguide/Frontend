@@ -272,7 +272,7 @@ function ProfileOnboarding() {
 
         {/* 하단 고정 버튼 */}
         {step !== "DONE" && (
-          <div className="sticky bottom-0 bg-white pb-6 pt-4">
+          <div className="sticky bottom-0 bg-white pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4">
             <button
               onClick={next}
               disabled={!canNext}

@@ -171,7 +171,7 @@ export default function ScanResultPage() {
           )}
         </div>
 
-        <div className="sticky bottom-0 border-t border-slate-100 bg-white px-4 pb-6 pt-3">
+        <div className="sticky bottom-0 border-t border-slate-100 bg-white px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3">
           {error && (
             <p role="alert" className="mb-2 text-center text-sm text-red-600">
               {error}
