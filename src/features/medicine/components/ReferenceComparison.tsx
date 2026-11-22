@@ -3,9 +3,11 @@ import type { ScanDrugSummary, ScanSessionDetail } from "../api/scanApi";
 import RepresentativePhoto from "./RepresentativePhoto";
 import { photoCrop } from "../utils/photoCrop";
 
-export default function ReferenceComparison({ drugId, imageUrl, ready, preview, detection, imageSize }: {
+export default function ReferenceComparison({ drugId, imageUrl, ready, preview, detection, imageSize, variant = "section" }: {
   drugId: number; imageUrl: string | null; ready: boolean; preview: string | null;
   detection?: ScanDrugSummary; imageSize: ScanSessionDetail["imageSize"];
+  /** inline: 스캔 결과 카드 안에 넣는 짧은 버전 (제목·안내문 없음) */
+  variant?: "section" | "inline";
 }) {
   const [crop, setCrop] = useState<{ source: string; data?: string; failed?: boolean }>();
   const bbox = detection?.bboxXyxy ?? null;
@@ -34,6 +36,24 @@ export default function ReferenceComparison({ drugId, imageUrl, ready, preview, 
     return () => { cancelled = true; image.onload = null; image.onerror = null; };
   }, [preview, detection, bbox, imageSize, source]);
   const current = crop?.source === source ? crop : undefined;
+  if (variant === "inline") {
+    const box = "flex h-[120px] items-center justify-center overflow-hidden rounded-xl bg-[#f4f5f9]";
+    return <div className="grid grid-cols-2 gap-2.5">
+      <div className="min-w-0">
+        <div className={box}>
+          {current?.data ? <img src={current.data} alt="내 사진" className="h-full w-full object-contain" />
+            : <span className="text-xs text-slate-400">{!preview || !detection || current?.failed ? "사진 없음" : "불러오는 중"}</span>}
+        </div>
+        <p className="mt-1.5 text-center text-xs text-slate-500">내 사진</p>
+      </div>
+      <div className="min-w-0">
+        <div className={box}>
+          <RepresentativePhoto key={`${drugId}:${imageUrl}`} drugId={drugId} url={imageUrl} ready={ready} />
+        </div>
+        <p className="mt-1.5 text-center text-xs text-slate-500">등록 이미지</p>
+      </div>
+    </div>;
+  }
   return <section className="mb-4 rounded-2xl bg-white p-4">
     <h3 className="mb-3 text-[15px] font-bold text-slate-900">사진 참고 비교</h3>
     <div className="grid grid-cols-2 gap-2.5">

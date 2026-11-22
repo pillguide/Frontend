@@ -116,8 +116,8 @@ routeTest(
       });
     await scanDraft.start();
     assert.equal(scanDraft.get().status, "idle");
-    scanDraft.setSelected([42]);
-    assert.deepEqual(scanDraft.get().selected, [42]);
+    assert.deepEqual(scanDraft.get().selected, [42]); // 기본 전체 선택
+    assert.equal(isScanDraftRoute("/mypage/alarm/new", scanDraft.get()), true);
     assert.equal(isScanDraftRoute("/medicine/single/7", scanDraft.get()), true);
     assert.equal(isScanDraftRoute("/scan/result", scanDraft.get()), true);
     assert.equal(isScanDraftRoute("/scan/camera", scanDraft.get()), true);

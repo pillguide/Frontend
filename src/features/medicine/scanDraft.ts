@@ -89,7 +89,9 @@ export const scanDraft = {
       const result = await scanApi.scan(file, requestId, current.signal);
       if (generation !== state.generation) return;
       controller = null;
-      update({ ...state, result, status: "idle" });
+      // 미리 정해둔 알약만 쓰므로 인식된 약은 기본으로 모두 저장 대상
+      const selected = result.drugs.flatMap((d) => (d.detectionId === null ? [] : [d.detectionId]));
+      update({ ...state, result, selected, status: "idle" });
     } catch (e) {
       if (generation !== state.generation || current.signal.aborted) return;
       controller = null;
@@ -111,6 +113,8 @@ export function useScanDraft() {
 
 export function isScanDraftRoute(pathname: string, draft: Draft): boolean {
   if (pathname === "/scan" || pathname === "/scan/camera" || pathname === "/scan/result") return true;
+  // 결과 화면에서 알림 추가로 갔다가 돌아와도 결과가 남아 있게
+  if (pathname === "/mypage/alarm/new" && !!draft.result) return true;
   return (
     !!draft.result &&
     draft.result.drugs.some(
