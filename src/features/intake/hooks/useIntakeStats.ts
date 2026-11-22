@@ -74,7 +74,8 @@ export function toScheduledDose(d: Dose): ScheduledDose {
   const time = d.scheduledAt.split("T")[1] ?? "00:00";
   const [hour, minute] = time.split(":").map(Number);
   return { doseId: d.id, alarm: { id: d.reminderId, medicineName: d.medicationName, dosage: d.dosage,
-    hour, minute, memo: d.memo ?? "", repeatDays: [], enabled: true }, taken: d.status === "TAKEN" };
+    hour, minute, memo: d.memo ?? "", repeatDays: [], enabled: true }, taken: d.status === "TAKEN",
+    scheduledAt: d.scheduledAt };
 }
 export function weekView(week: Week) {
   const today = toDateKey(koreaToday());

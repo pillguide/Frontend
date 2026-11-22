@@ -55,6 +55,7 @@ export function formatKoreanTime(hour: number, minute: number): string {
 
 /** 복약 시간대 묶음 */
 export function timeOfDayLabel(hour: number): string {
+  if (hour < 5) return "새벽"; // 0~4시 (예: 오전 12시)
   if (hour < 11) return "아침";
   if (hour < 15) return "점심";
   if (hour < 21) return "저녁";
