@@ -49,23 +49,54 @@ test("scan sends file and stable request id as multipart", async () => {
   assert.equal(sent.init.body.get("file"), file);
   assert.equal(sent.init.body.get("requestId"), "request-id");
 });
-test("clearing or replacing draft rejects old completion and revokes preview", () => {
+/** 응답을 abort 될 때까지 붙잡아 두는 fetch. 호출에 쓰인 signal을 돌려준다 */
+function hangingFetch() {
+  const seen = {};
+  globalThis.fetch = (url, init) =>
+    new Promise((_, reject) => {
+      seen.signal = init.signal;
+      init.signal.addEventListener("abort", () =>
+        reject(new DOMException("aborted", "AbortError")),
+      );
+    });
+  return seen;
+}
+test("clearing draft aborts the running scan, drops its result and revokes preview", async () => {
   let revoked = [];
   URL.createObjectURL = () => "blob:preview";
   URL.revokeObjectURL = (url) => revoked.push(url);
   const first = new File(["a"], "a.png");
   scanDraft.select(first);
-  const request = scanDraft.begin();
   const id = scanDraft.get().requestId;
   assert.equal(scanDraft.get().file, first);
-  assert.equal(scanDraft.get().requestId, id);
+  const seen = hangingFetch();
+  const running = scanDraft.start();
+  assert.equal(scanDraft.get().status, "analyzing");
   scanDraft.clear();
-  assert.equal(request.signal.aborted, true);
-  assert.equal(scanDraft.complete(request.generation, { sessionId: 1 }), false);
+  await running;
+  assert.equal(seen.signal.aborted, true);
   assert.equal(scanDraft.get().result, null);
+  assert.equal(scanDraft.get().status, "idle");
   assert.deepEqual(revoked, ["blob:preview"]);
   scanDraft.select(new File(["b"], "b.png"));
   assert.notEqual(scanDraft.get().requestId, id);
+  scanDraft.clear();
+});
+test("failed scan keeps the photo for retry; 409 blocks same-photo retry", async () => {
+  URL.createObjectURL = () => "blob:preview";
+  URL.revokeObjectURL = () => {};
+  scanDraft.select(new File(["a"], "a.png"));
+  globalThis.fetch = async () =>
+    Response.json({ success: false, message: "x" }, { status: 500 });
+  await scanDraft.start();
+  assert.equal(scanDraft.get().status, "failed");
+  assert.equal(scanDraft.get().conflict, false);
+  assert.ok(scanDraft.get().file);
+  globalThis.fetch = async () =>
+    Response.json({ success: false, message: "x" }, { status: 409 });
+  await scanDraft.start();
+  assert.equal(scanDraft.get().status, "failed");
+  assert.equal(scanDraft.get().conflict, true);
   scanDraft.clear();
 });
 import { test as routeTest } from "node:test";
@@ -78,15 +109,18 @@ routeTest(
     URL.createObjectURL = () => "blob:preview";
     URL.revokeObjectURL = () => {};
     scanDraft.select(new File(["a"], "a.png"));
-    const request = scanDraft.begin();
-    scanDraft.complete(request.generation, {
-      sessionId: 1,
-      drugs: [{ drugId: 7 }],
-    });
+    globalThis.fetch = async () =>
+      Response.json({
+        success: true,
+        data: { sessionId: 1, drugs: [{ drugId: 7, detectionId: 42 }] },
+      });
+    await scanDraft.start();
+    assert.equal(scanDraft.get().status, "idle");
     scanDraft.setSelected([42]);
+    assert.deepEqual(scanDraft.get().selected, [42]);
     assert.equal(isScanDraftRoute("/medicine/single/7", scanDraft.get()), true);
     assert.equal(isScanDraftRoute("/scan/result", scanDraft.get()), true);
-    assert.deepEqual(scanDraft.get().selected, [42]);
+    assert.equal(isScanDraftRoute("/scan/camera", scanDraft.get()), true);
     assert.equal(
       isScanDraftRoute("/medicine/single/8", scanDraft.get()),
       false,
