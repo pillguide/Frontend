@@ -9,10 +9,18 @@ export interface MyDrug {
   authorizationStatus: string | null;
   sourceAsOf: string | null;
   representativeImageStatus: string;
+  firstRegisteredAt: string;
+  /** 성분 표시 (예: 아세트아미노펜) */
+  ingredientDisplay: string | null;
+  /** 분류 (예: 해열·진통제) */
+  classificationName: string | null;
 }
 export interface MyDrugPage {
   items: MyDrug[];
   page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
   hasNext: boolean;
 }
 export const myDrugApi = {
