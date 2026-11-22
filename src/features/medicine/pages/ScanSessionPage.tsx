@@ -1,29 +1,16 @@
 // 스캔 기록 상세: 그때 스캔한 약 목록과 함께 복용 확인 (GET /api/v1/scan/{sessionId})
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronRight, Pill } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
 import LoginRequired from "../../../components/common/LoginRequired";
 import { singleMedicinePath } from "../../../constants/routes";
 import { authStorage } from "../../../utils/authStorage";
 import CombinationSummary from "../components/CombinationSummary";
-import RepresentativePhoto from "../components/RepresentativePhoto";
-import { scanApi, type ScanDrugSummary, type ScanSessionDetail } from "../api/scanApi";
+import DrugThumb from "../components/DrugThumb";
+import { scanApi, type ScanSessionDetail } from "../api/scanApi";
 import { formatScannedAt } from "../utils/drugText";
-
-/** 대표 이미지를 칸에 꽉 채워서, 없으면 알약 아이콘 */
-function DrugThumb({ drug, className }: { drug: ScanDrugSummary; className: string }) {
-  return (
-    <span className={`flex shrink-0 items-center justify-center overflow-hidden bg-[#f4f5f9] ${className}`}>
-      {drug.representativeImageStatus === "READY" && drug.imageUrl ? (
-        <RepresentativePhoto key={`${drug.drugId}:${drug.imageUrl}`} drugId={drug.drugId} url={drug.imageUrl} ready />
-      ) : (
-        <Pill size={20} className="text-slate-300" />
-      )}
-    </span>
-  );
-}
 
 export default function ScanSessionPage() {
   const navigate = useNavigate();
