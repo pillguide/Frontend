@@ -13,10 +13,27 @@ export function toTextItems(text: string | null | undefined): string[] {
   const lines = clean
     .split(/\n+/)
     .map((l) => l.trim())
-    .filter((l) => l && !/^(효능\s*·?\s*효과|용법\s*·?\s*용량|사용상의\s*주의\s*사항|저장\s*방법)$/.test(l));
+    .filter((l) => l && !/^(\d+\.\s*)?(주\s*)?(효능\s*·?\s*효과|용법\s*·?\s*용량|사용상의\s*주의\s*사항|저장\s*방법)$/.test(l));
   if (lines.length > 1) return lines;
   // 한 덩어리면 "~다." 문장 단위로 나눔
   return clean.split(/(?<=다\.)\s+/).map((s) => s.trim()).filter(Boolean);
+}
+
+export type TextBlock = { kind: "heading" | "item" | "notice"; text: string };
+
+/**
+ * 식약처 원문 줄을 화면용 블록으로 나눈다
+ * - "식약처 … 허가 …" 안내 줄 → notice (노란 칩)
+ * - "2. 다음 질환에도 …"처럼 "숫자." 로 시작 → heading (작은 소제목)
+ * - 나머지 → item (글머리표), 앞의 "(1)", "-", "•" 같은 기호는 뗀다
+ */
+export function toTextBlocks(text: string | null | undefined): TextBlock[] {
+  return toTextItems(text).map((line) => {
+    if (/^식약처.*허가/.test(line)) return { kind: "notice", text: line };
+    const heading = line.match(/^\d+\.\s*(.+)$/);
+    if (heading) return { kind: "heading", text: heading[1] };
+    return { kind: "item", text: line.replace(/^(\(\d+\)|[-•·])\s*/, "") };
+  });
 }
 
 /** 2026-11-10T15:12:30 → 11월 10일 오후 3:12 */

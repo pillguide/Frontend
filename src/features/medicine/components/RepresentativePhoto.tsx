@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { drugApi } from "../api/drugApi";
 
-/** One automatic URL renewal; an unavailable image never blocks selection. */
+/** One automatic URL renewal; an unavailable image never blocks selection.
+ *  데이터셋 대표 이미지는 세로로 긴 사진이라 칸을 꽉 채우도록 잘라서(cover) 보여준다. */
 export default function RepresentativePhoto({ drugId, url, ready }: {
   drugId: number; url: string | null; ready: boolean;
 }) {
@@ -35,6 +36,6 @@ export default function RepresentativePhoto({ drugId, url, ready }: {
     <p>이미지를 불러오지 못했어요.</p>
     <button type="button" onClick={() => void renew()} className="mt-2 text-primary underline">다시 불러오기</button>
   </div>;
-  return <img src={current ?? undefined} alt="데이터셋 대표 이미지" className="h-full w-full rounded-xl object-contain"
+  return <img src={current ?? undefined} alt="데이터셋 대표 이미지" className="h-full w-full object-cover"
     onError={() => { if (!attempted.current) void renew(); else setStatus("failed"); }} />;
 }
