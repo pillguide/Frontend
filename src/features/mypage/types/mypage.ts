@@ -11,9 +11,3 @@ export interface MyPageMenuItem {
   label: string;
   path: string;
 }
-
-export interface MyPageResponse {
-  userName: string;
-  quickActions: QuickAction[];
-  menus: MyPageMenuItem[];
-}
