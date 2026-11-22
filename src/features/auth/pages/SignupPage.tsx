@@ -1,33 +1,73 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useRef, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import type { OnboardingForm } from "../types/onboarding";
 import { ChevronLeft } from "lucide-react";
 import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES } from "../../../constants/routes";
 import { useUser } from "../../user/context/UserContext";
+import { isProfileComplete } from "../../user/types/user";
 import maleIcon from "../../../assets/남자.png";
 import femaleIcon from "../../../assets/여자.png";
 import { fontScaleStorage, type FontScale } from "../../../utils/fontScale";
 import toast from "react-hot-toast";
 import { authStorage } from "../../../utils/authStorage";
+import { logout } from "../api/authApi";
+import { scanDraft } from "../../medicine/scanDraft";
 
 type Step = "NAME" | "GENDER_BIRTH" | "EMAIL" | "FONT_SIZE" | "DONE";
-
-const stepOrder: Step[] = ["NAME", "GENDER_BIRTH", "EMAIL", "FONT_SIZE", "DONE"];
 
 const fontOptions: FontScale[] = ["xs", "sm", "md", "lg", "xl"];
 const fontLabels = ["최대 작게", "조금 작게", "중간", "조금 크게", "최대 크게"];
 
-export default function ProfileOnboardingPage() {
-  const navigate = useNavigate();
-  const { updateProfile } = useUser();
+/**
+ * 소셜 로그인으로 못 받은 정보 입력 (로그인 직후 AuthGate·OAuth 콜백이 보내는 곳)
+ * 내 정보를 다 불러온 뒤에 단계를 정해야 이미 받은 항목을 다시 묻지 않는다
+ */
+export default function SignupPage() {
+  const { profile, loading, error, reload } = useUser();
+  // 처음 들어올 때 이미 다 채워져 있으면 입력할 게 없으니 홈으로 (입력을 마친 뒤의 완료 화면은 유지)
+  const [completeOnEnter] = useState(() => !loading && isProfileComplete(profile));
+  if (completeOnEnter) return <Navigate to={ROUTES.HOME} replace />;
+  if (loading || error) {
+    return (
+      <MobileLayout showBottomNav={false}>
+        <p className="p-10 text-center text-sm text-slate-500">
+          {error ? (
+            <>
+              정보를 불러오지 못했어요{" "}
+              <button type="button" onClick={reload} className="font-bold text-primary">
+                다시 시도
+              </button>
+            </>
+          ) : (
+            "불러오는 중..."
+          )}
+        </p>
+      </MobileLayout>
+    );
+  }
+  return <ProfileOnboarding />;
+}
 
-  const [step, setStep] = useState<Step>("NAME");
+function ProfileOnboarding() {
+  const navigate = useNavigate();
+  const { profile, updateProfile } = useUser();
+
+  // 소셜 로그인으로 이미 받은 정보는 채워 두고, 빠진 항목의 단계만 보여준다
+  // (구글·네이버: 성별·생년월일, 카카오: 성별·생년월일·이메일)
+  const stepOrder = useRef<Step[]>([
+    ...(profile.name.trim() ? [] : (["NAME"] as Step[])),
+    ...(profile.gender && profile.birthDate ? [] : (["GENDER_BIRTH"] as Step[])),
+    ...(profile.email ? [] : (["EMAIL"] as Step[])),
+    "FONT_SIZE",
+    "DONE",
+  ]).current;
+  const [step, setStep] = useState<Step>(stepOrder[0]);
   const [form, setForm] = useState<OnboardingForm>({
-    name: "",
-    gender: null,
-    birthDate: "",
-    email: "",
+    name: profile.name,
+    gender: profile.gender,
+    birthDate: profile.birthDate,
+    email: profile.email,
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -70,22 +110,24 @@ export default function ProfileOnboardingPage() {
       return;
     }
 
-    setStep((prev) => {
-      if (prev === "NAME") return "GENDER_BIRTH";
-      if (prev === "GENDER_BIRTH") return "EMAIL";
-      if (prev === "EMAIL") return "FONT_SIZE";
-      if (prev === "FONT_SIZE") return "DONE";
-      return "DONE";
-    });
+    setStep((prev) => stepOrder[stepOrder.indexOf(prev) + 1] ?? "DONE");
   };
 
-  const goBack = () => {
+  // 첫 단계에서 뒤로 가면 로그아웃하고 로그인 화면으로 (다른 계정으로 로그인할 수 있게)
+  const goBack = async () => {
     const idx = stepOrder.indexOf(step);
-    if (idx <= 0) {
-      navigate(ROUTES.LOGIN, { replace: true });
+    if (idx > 0) {
+      setStep(stepOrder[idx - 1]);
       return;
     }
-    setStep(stepOrder[idx - 1]);
+    try {
+      await logout();
+    } catch {
+      /* 서버 로그아웃에 실패해도 이 기기에서는 로그아웃 */
+    }
+    scanDraft.clear();
+    authStorage.clear();
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   // 버튼 문구
@@ -101,7 +143,7 @@ export default function ProfileOnboardingPage() {
         <div className="flex items-center gap-2 mb-6">
           <button
             type="button"
-            onClick={goBack}
+            onClick={() => void goBack()}
             className="p-2 -ml-2 active:scale-[0.98] transition"
             aria-label="뒤로가기"
           >
@@ -110,11 +152,11 @@ export default function ProfileOnboardingPage() {
         </div>
 
         {/* 본문 */}
+        {step === stepOrder[0] && step !== "FONT_SIZE" && (
+          <p className="mb-3 text-sm text-slate-500">몇 가지만 입력하면 시작할 수 있어요</p>
+        )}
         {step === "NAME" && (
           <section className="flex-1">
-            <p className="text-sm text-slate-500 mb-3">
-              마지막으로 몇 가지만 입력하면 가입이 완료돼요!
-            </p>
             <h1 className="text-xl font-extrabold mb-6">이름을 입력해 주세요</h1>
             <label className="block text-sm text-slate-400 mb-2">이름</label>
             <input

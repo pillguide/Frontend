@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { fontScaleStorage, type FontScale } from "./utils/fontScale";
 import { authStorage } from "./utils/authStorage";
@@ -22,7 +22,8 @@ import ScanResultPage from "./features/medicine/pages/ScanResultPage";
 import ScanSessionPage from "./features/medicine/pages/ScanSessionPage";
 import SingleMedicineDetailPage from "./features/medicine/pages/SingleMedicineDetailPage";
 import { AlarmProvider } from "./features/alarm/context/AlarmContext";
-import { UserProvider } from "./features/user/context/UserContext";
+import { UserProvider, useUser } from "./features/user/context/UserContext";
+import { isProfileComplete } from "./features/user/types/user";
 import { IntakeProvider } from "./features/intake/context/IntakeContext";
 import ProfilePage from "./features/user/pages/ProfilePage";
 import CheckRecordPage from "./features/intake/pages/CheckRecordPage";
@@ -55,6 +56,23 @@ function Protected({ children }: { children: ReactNode }) {
   return authStorage.isLoggedIn() ? children : <MobileLayout><LoginRequired /></MobileLayout>;
 }
 
+/**
+ * 앱은 로그인해야만 쓸 수 있다.
+ * - 로그인 안 했으면 어디로 들어와도 로그인 화면으로
+ * - 로그인했는데 소셜 로그인으로 못 받은 정보(이름·성별·생년월일·이메일)가 남아 있으면 추가 정보 입력으로
+ */
+function AuthGate({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  const { profile, loading, error } = useUser();
+  const loggedIn = authStorage.isLoggedIn();
+  if (!loggedIn) return pathname === ROUTES.LOGIN ? children : <Navigate to={ROUTES.LOGIN} replace />;
+  if (loading || error) return children;
+  const complete = isProfileComplete(profile);
+  if (!complete && pathname !== ROUTES.SIGNUP) return <Navigate to={ROUTES.SIGNUP} replace />;
+  if (pathname === ROUTES.LOGIN) return <Navigate to={complete ? ROUTES.HOME : ROUTES.SIGNUP} replace />;
+  return children;
+}
+
 function SessionApp() {
   const identity = useSyncExternalStore(subscribeAuth, authStorage.sessionIdentity);
   const previousIdentity = useRef(identity);
@@ -81,6 +99,7 @@ function SessionApp() {
             <PushSync />
             <ScanDraftBoundary />
             <ScanSheetProvider>
+            <AuthGate>
             <Routes>
               {/* 인증 */}
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -112,6 +131,7 @@ function SessionApp() {
               <Route path={ROUTES.ALARM_NEW} element={<Protected><AlarmFormPage /></Protected>} />
               <Route path={ROUTES.ALARM_EDIT} element={<Protected><AlarmFormPage /></Protected>} />
             </Routes>
+            </AuthGate>
             </ScanSheetProvider>
           </IntakeProvider>
         </AlarmProvider>

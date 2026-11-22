@@ -5,6 +5,8 @@ import MobileLayout from "../../../layout/MobileLayout";
 import { ROUTES } from "../../../constants/routes";
 import { authStorage } from "../../../utils/authStorage";
 import { exchangeOAuthCode, OAUTH_EXCHANGE_VERIFIER_KEY } from "../api/authApi";
+import { memberApi } from "../../user/api/memberApi";
+import { isProfileComplete } from "../../user/types/user";
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
@@ -22,9 +24,11 @@ export default function OAuthCallbackPage() {
       return;
     }
     void exchangeOAuthCode(code, verifier)
-      .then(({ accessToken, refreshToken }) => {
+      .then(async ({ accessToken, refreshToken }) => {
         authStorage.setTokens(accessToken, refreshToken);
-        navigate(ROUTES.HOME, { replace: true });
+        // 소셜 로그인으로 못 받은 정보가 있으면 추가 정보 입력부터
+        const profile = await memberApi.me().catch(() => null);
+        navigate(profile && !isProfileComplete(profile) ? ROUTES.SIGNUP : ROUTES.HOME, { replace: true });
       })
       .catch(() => navigate(`${ROUTES.LOGIN}?error=exchange_failed`, { replace: true }))
       .finally(() => sessionStorage.removeItem(OAUTH_EXCHANGE_VERIFIER_KEY));
