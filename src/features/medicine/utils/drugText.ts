@@ -9,7 +9,11 @@ export function toTextItems(text: string | null | undefined): string[] {
     .replace(/&nbsp;/g, " ")
     .replace(/[ \t]+/g, " ")
     .trim();
-  const lines = clean.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  // 식약처 원문 맨 앞의 "효능효과" 같은 제목 줄은 화면 제목과 겹쳐서 뺀다
+  const lines = clean
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter((l) => l && !/^(효능\s*·?\s*효과|용법\s*·?\s*용량|사용상의\s*주의\s*사항|저장\s*방법)$/.test(l));
   if (lines.length > 1) return lines;
   // 한 덩어리면 "~다." 문장 단위로 나눔
   return clean.split(/(?<=다\.)\s+/).map((s) => s.trim()).filter(Boolean);
