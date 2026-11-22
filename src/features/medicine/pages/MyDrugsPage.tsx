@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
 import LoginRequired from "../../../components/common/LoginRequired";
@@ -13,6 +13,8 @@ import {
 
 export default function MyDrugsPage() {
   const navigate = useNavigate();
+  // 스캔 결과에서 방금 저장한 약 (NEW 표시)
+  const newIds: number[] = (useLocation().state as { newIds?: number[] } | null)?.newIds ?? [];
   const loggedIn = authStorage.isLoggedIn();
   const [items, setItems] = useState<MyDrug[]>([]);
   const [page, setPage] = useState(0);
@@ -101,6 +103,11 @@ export default function MyDrugsPage() {
                   onClick={() => navigate(singleMedicinePath(drug.drugId))}
                 >
                   {drug.name}
+                  {newIds.includes(drug.memberDrugId) && (
+                    <span className="ml-1.5 rounded-md bg-primary-50 px-1.5 py-0.5 align-middle text-[10px] font-bold text-primary">
+                      NEW
+                    </span>
+                  )}
                 </button>
                 <p className="mt-1 text-xs text-slate-500">
                   품목번호 {drug.code} · 자료 {infoStatusLabel(drug.infoStatus)}{" "}
