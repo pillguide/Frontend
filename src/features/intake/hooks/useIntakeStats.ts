@@ -18,8 +18,17 @@ function useResource<T>(key: string, load: () => Promise<T>) {
       .catch(() => { if (current) setResult({ key: requestKey, error: "복약 정보를 불러오지 못했어요." }); });
     return () => { current = false; };
   }, [requestKey, load]);
+  return view(result, key, requestKey);
+}
+/**
+ * 체크 등으로 다시 불러오는 동안(revision만 바뀐 경우)에는 이전 데이터를 그대로 보여준다.
+ * 날짜처럼 key 자체가 바뀌었을 때만 불러오는 중으로 처리 → 체크할 때 화면이 깜빡이지 않음
+ */
+function view<T>(result: Result<T> | null, key: string, requestKey: string) {
   const active = result?.key === requestKey ? result : null;
-  return { data: active?.data, error: active?.error, loading: !active && authStorage.isLoggedIn() };
+  const stale = !active && result?.data !== undefined && result.key.startsWith(`${key}:`) ? result : null;
+  const shown = active ?? stale;
+  return { data: shown?.data, error: active?.error, loading: !shown && authStorage.isLoggedIn() };
 }
 const loadHome = () => medicationApi.home();
 // The server sends a local date-time in Asia/Seoul, without an offset.
@@ -59,8 +68,7 @@ function useWeekResource(key: string) {
       .catch(() => { if (current) setResult({ key: requestKey, error: "복약 기록을 불러오지 못했어요." }); });
     return () => { current = false; };
   }, [key, requestKey]);
-  const active = result?.key === requestKey ? result : null;
-  return { data: active?.data, error: active?.error, loading: !active && authStorage.isLoggedIn() };
+  return view(result, key, requestKey);
 }
 export function toScheduledDose(d: Dose): ScheduledDose {
   const time = d.scheduledAt.split("T")[1] ?? "00:00";
