@@ -50,9 +50,23 @@ export interface ScanSessionDetail {
   userImageAvailable: boolean;
   imageComparisonStatus: string;
 }
+/** 스캔 세션 안의 개별 약 상세 (GET /api/v1/scan/{sessionId}/drugs/{drugId}) */
+export interface ScanDrugDetail {
+  drugId: number;
+  name: string;
+  code: string;
+  imageUrl: string | null;
+  effect: string | null;
+  dosageMethod: string | null;
+  storageMethod: string | null;
+  sideEffects: string | null;
+  representativeImageStatus: string | null;
+}
 export const scanApi = {
   list: () => api.get<ScanSessionSummary[]>("/api/v1/scan"),
   detail: (id: number) => api.get<ScanSessionDetail>(`/api/v1/scan/${id}`),
+  drugDetail: (sessionId: number, drugId: number) =>
+    api.get<ScanDrugDetail>(`/api/v1/scan/${sessionId}/drugs/${drugId}`),
   scan: (file: File, requestId: string, signal?: AbortSignal) => {
     const body = new FormData();
     body.append("file", file);
