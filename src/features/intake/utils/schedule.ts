@@ -9,6 +9,8 @@ export interface ScheduledDose {
   doseId: number;
   alarm: Alarm;
   taken: boolean;
+  /** 서버 기록의 복약 시각 (YYYY-MM-DDTHH:mm:ss, 한국 시간) — 놓침 판단용 */
+  scheduledAt?: string;
 }
 
 export interface DayStats {

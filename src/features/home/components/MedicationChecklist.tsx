@@ -49,7 +49,10 @@ export default function MedicationChecklist({ doses, onToggle, onOpen, onManage,
             <div key={group.label}>
               <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{group.label}</p>
               <div className="overflow-hidden rounded-[24px] bg-white shadow-card">
-                {group.items.map(({ alarm, taken, doseId }, i) => (
+                {group.items.map(({ alarm, taken, doseId, scheduledAt }, i) => {
+                  // 시간이 지났는데 체크 안 한 약은 "놓침"
+                  const missed = !taken && !!scheduledAt && Date.parse(`${scheduledAt}+09:00`) < Date.now();
+                  return (
                   <div
                     key={doseId}
                     className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-slate-100" : ""}`}
@@ -88,14 +91,16 @@ export default function MedicationChecklist({ doses, onToggle, onOpen, onManage,
                           {alarm.dosage && <span className="ml-1 text-sm font-medium no-underline">{alarm.dosage}</span>}
                         </span>
                         <span className="mt-0.5 block text-sm text-slate-500">
-                          {formatKoreanTime(alarm.hour, alarm.minute)} · {taken ? "복용 완료" : "예정"}
+                          {formatKoreanTime(alarm.hour, alarm.minute)} ·{" "}
+                          {taken ? "복용 완료" : missed ? <span className="font-medium text-amber-600">놓침</span> : "예정"}
                           {alarm.memo && ` · ${alarm.memo}`}
                         </span>
                       </span>
                       <ChevronRight size={18} className="flex-shrink-0 text-slate-300" />
                     </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
