@@ -13,7 +13,7 @@ export function toTextItems(text: string | null | undefined): string[] {
   const lines = clean
     .split(/\n+/)
     .map((l) => l.trim())
-    .filter((l) => l && !/^(효능\s*·?\s*효과|용법\s*·?\s*용량|사용상의\s*주의\s*사항|저장\s*방법)$/.test(l));
+    .filter((l) => l && !/^(\d+\.\s*)?(주\s*)?(효능\s*·?\s*효과|용법\s*·?\s*용량|사용상의\s*주의\s*사항|저장\s*방법)$/.test(l));
   if (lines.length > 1) return lines;
   // 한 덩어리면 "~다." 문장 단위로 나눔
   return clean.split(/(?<=다\.)\s+/).map((s) => s.trim()).filter(Boolean);
