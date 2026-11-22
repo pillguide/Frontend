@@ -41,7 +41,7 @@ export default function ReferenceComparison({ drugId, imageUrl, ready, preview, 
     return <div className="grid grid-cols-2 gap-2.5">
       <div className="min-w-0">
         <div className={box}>
-          {current?.data ? <img src={current.data} alt="내 사진" className="h-full w-full object-contain" />
+          {current?.data ? <img src={current.data} alt="내 사진" className="h-full w-full object-cover" />
             : <span className="text-xs text-slate-400">{!preview || !detection || current?.failed ? "사진 없음" : "불러오는 중"}</span>}
         </div>
         <p className="mt-1.5 text-center text-xs text-slate-500">내 사진</p>

@@ -9,15 +9,13 @@ import { ROUTES } from "../../../constants/routes";
 import { drugApi, type DrugDetail } from "../api/drugApi";
 import { toTextItems } from "../utils/drugText";
 import RepresentativePhoto from "../components/RepresentativePhoto";
+import DrugTextBlocks from "../components/DrugTextBlocks";
 
-/** 효능은 처음 이만큼만 보여주고 나머지는 더 보기로 */
-const EFFECT_PREVIEW = 3;
 
 export default function SingleMedicineDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [state, setState] = useState<{ id?: string; data?: DrugDetail; error?: boolean }>({});
-  const [showAllEffects, setShowAllEffects] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -49,12 +47,12 @@ export default function SingleMedicineDetailPage() {
     );
   }
 
-  const effects = toTextItems(data.effect);
+  const hasEffect = toTextItems(data.effect).length > 0;
   const sections = [
-    { value: "side-effects", title: "부작용", items: toTextItems(data.sideEffects) },
-    { value: "usage", title: "복용 방법", items: toTextItems(data.dosageMethod) },
-    { value: "storage", title: "보관 방법", items: toTextItems(data.storageMethod) },
-  ].filter((section) => section.items.length > 0);
+    { value: "side-effects", title: "부작용", text: data.sideEffects },
+    { value: "usage", title: "복용 방법", text: data.dosageMethod },
+    { value: "storage", title: "보관 방법", text: data.storageMethod },
+  ].filter((section) => toTextItems(section.text).length > 0);
   const classification = data.reference?.classificationName;
   const ingredient = data.reference?.ingredientDisplay;
   const imageReady = data.reference?.representativeImageStatus === "READY" && !!data.imageUrl;
@@ -94,27 +92,14 @@ export default function SingleMedicineDetailPage() {
           복약 알림 설정하기
         </button>
 
-        {effects.length === 0 && sections.length === 0 ? (
+        {!hasEffect && sections.length === 0 ? (
           <p className={`${card} p-5 text-center text-sm text-slate-400`}>등록된 약 정보가 없어요</p>
         ) : (
           <>
-            {effects.length > 0 && (
+            {hasEffect && (
               <section className={`${card} p-5`}>
                 <h3 className="mb-3 font-bold text-slate-900">주요 효능</h3>
-                <ul className="space-y-2 text-sm text-slate-700">
-                  {(showAllEffects ? effects : effects.slice(0, EFFECT_PREVIEW)).map((item, i) => (
-                    <li key={i}>• {item}</li>
-                  ))}
-                </ul>
-                {effects.length > EFFECT_PREVIEW && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllEffects(!showAllEffects)}
-                    className="mt-3 text-sm font-bold text-primary"
-                  >
-                    {showAllEffects ? "접기" : "더 보기"}
-                  </button>
-                )}
+                <DrugTextBlocks text={data.effect} limit={3} />
               </section>
             )}
 
@@ -131,11 +116,9 @@ export default function SingleMedicineDetailPage() {
                     </Accordion.Trigger>
                   </Accordion.Header>
                   <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                    <ul className="space-y-2 px-5 pb-5 text-sm text-slate-700">
-                      {section.items.map((item, i) => (
-                        <li key={i}>• {item}</li>
-                      ))}
-                    </ul>
+                    <div className="px-5 pb-5">
+                      <DrugTextBlocks text={section.text} />
+                    </div>
                   </Accordion.Content>
                 </Accordion.Item>
               ))}
