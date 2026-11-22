@@ -6,13 +6,15 @@ import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
 import LoginRequired from "../../../components/common/LoginRequired";
-import { ROUTES, scanSessionPath } from "../../../constants/routes";
+import { scanSessionPath } from "../../../constants/routes";
 import { authStorage } from "../../../utils/authStorage";
+import { useScanSheet } from "../context/scanSheet";
 import { scanApi, type ScanSessionSummary } from "../api/scanApi";
 import { formatScannedAt } from "../utils/drugText";
 
 export default function ScanRecordPage() {
   const navigate = useNavigate();
+  const openScanSheet = useScanSheet();
   const loggedIn = authStorage.isLoggedIn();
   const [records, setRecords] = useState<ScanSessionSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -93,7 +95,7 @@ export default function ScanRecordPage() {
             </div>
             <p className="mb-5 text-sm text-slate-500">약을 스캔하면 여기에 기록돼요</p>
             <button
-              onClick={() => navigate(ROUTES.SCAN)}
+              onClick={openScanSheet}
               className="rounded-full border border-[#534AB7] bg-white px-6 py-2.5 text-sm font-medium text-[#534AB7] transition-colors hover:bg-[#534AB7] hover:text-white"
             >
               약 스캔하기

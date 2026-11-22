@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { Camera, ChevronLeft, ChevronRight, Clock, Pill, Search, SearchX, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
-import { ROUTES, singleMedicinePath } from "../../../constants/routes";
+import { singleMedicinePath } from "../../../constants/routes";
+import { useScanSheet } from "../../medicine/context/scanSheet";
 import { drugApi, type DrugSearchItem } from "../../medicine/api/drugApi";
 import { recentSearchStorage } from "../utils/searchMedicine";
 import HighlightText from "../components/HighlightText";
@@ -22,6 +23,7 @@ interface SearchState {
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const openScanSheet = useScanSheet();
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>(() => recentSearchStorage.get());
   const [result, setResult] = useState<SearchState | null>(null);
@@ -158,7 +160,7 @@ export default function SearchPage() {
               </section>
             )}
 
-            <ScanBanner onClick={() => navigate(ROUTES.SCAN)} />
+            <ScanBanner onClick={openScanSheet} />
           </div>
         )}
 
@@ -224,7 +226,7 @@ export default function SearchPage() {
             <p className="text-base font-semibold text-slate-700">‘{keyword}’ 검색 결과가 없어요</p>
             <p className="mt-1 text-sm text-slate-500">약 이름을 다시 확인하거나 사진으로 찾아보세요</p>
             <div className="mt-6 w-full">
-              <ScanBanner onClick={() => navigate(ROUTES.SCAN)} />
+              <ScanBanner onClick={openScanSheet} />
             </div>
           </div>
         )}

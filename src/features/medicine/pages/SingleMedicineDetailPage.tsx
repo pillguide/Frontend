@@ -9,6 +9,7 @@ import { getSingleMedicine } from "../mock/medicine.mock";
 import type { SingleMedicineDetail } from "../types/medicine";
 import PageHeader from "../../../components/common/PageHeader";
 import { ROUTES } from "../../../constants/routes";
+import { useScanSheet } from "../context/scanSheet";
 import { drugApi } from "../api/drugApi";
 import { toTextItems } from "../utils/drugText";
 import ReferenceComparison from "../components/ReferenceComparison";
@@ -38,6 +39,7 @@ interface Props {
 
 export default function SingleMedicineDetailPage({ source = "api" }: Props) {
   const navigate = useNavigate();
+  const openScanSheet = useScanSheet();
   const { id } = useParams();
   const [params] = useSearchParams();
   const draft = useScanDraft();
@@ -109,9 +111,7 @@ export default function SingleMedicineDetailPage({ source = "api" }: Props) {
               scanDraft.setSelected(draft.selected.filter((selected) => selected !== detection.detectionId));
               navigate(ROUTES.SCAN_RESULT);
             }}>이 검출 저장에서 제외</button>
-            <button type="button" className="rounded-xl border p-3 text-sm" onClick={() => {
-              scanDraft.clear(); navigate(ROUTES.SCAN);
-            }}>다시 촬영</button>
+            <button type="button" className="rounded-xl border p-3 text-sm" onClick={openScanSheet}>다시 촬영</button>
           </div>}
         </>}
 

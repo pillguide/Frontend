@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
 import { ROUTES, singleMedicinePath } from "../../../constants/routes";
+import { useScanSheet } from "../context/scanSheet";
 import { myDrugApi } from "../api/myDrugApi";
 import { scanDraft, useScanDraft } from "../scanDraft";
 import {
@@ -14,6 +15,7 @@ import RepresentativePhoto from "../components/RepresentativePhoto";
 
 export default function ScanResultPage() {
   const navigate = useNavigate();
+  const openScanSheet = useScanSheet();
   const { result, selected, preview } = useScanDraft();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -51,7 +53,7 @@ export default function ScanResultPage() {
             현재 스캔 결과가 없어요.{" "}
             <button
               className="text-primary underline"
-              onClick={() => navigate(ROUTES.SCAN)}
+              onClick={openScanSheet}
             >
               사진 선택하기
             </button>
@@ -78,10 +80,7 @@ export default function ScanResultPage() {
                 <button
                   disabled={busy}
                   className="font-bold text-primary disabled:opacity-40"
-                  onClick={() => {
-                    scanDraft.clear();
-                    navigate(ROUTES.SCAN);
-                  }}
+                  onClick={openScanSheet}
                 >
                   다시 찍기
                 </button>
@@ -197,10 +196,7 @@ export default function ScanResultPage() {
               <button
                 disabled={busy}
                 className="flex-1 rounded-xl border p-3 disabled:opacity-40"
-                onClick={() => {
-                  scanDraft.clear();
-                  navigate(ROUTES.SCAN);
-                }}
+                onClick={openScanSheet}
               >
                 다시 촬영
               </button>
