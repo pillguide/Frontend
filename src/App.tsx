@@ -31,6 +31,7 @@ import SearchPage from "./features/search/pages/SearchPage";
 import AlarmListPage from "./features/alarm/pages/AlarmListPage";
 import AlarmFormPage from "./features/alarm/pages/AlarmFormPage";
 import { usePushSync } from "./features/alarm/hooks/usePushNotifications";
+import DoseAlarm from "./features/alarm/components/DoseAlarm";
 
 function ScanDraftBoundary() {
   const { pathname } = useLocation();
@@ -97,6 +98,7 @@ function SessionApp() {
         <AlarmProvider>
           <IntakeProvider>
             <PushSync />
+            {authStorage.isLoggedIn() && <DoseAlarm />}
             <ScanDraftBoundary />
             <ScanSheetProvider>
             <AuthGate>
