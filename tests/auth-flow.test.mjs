@@ -95,3 +95,26 @@ test('failed server logout preserves local credentials', async () => {
   assert.equal(authStorage.getAccessToken(), 'keep-access');
   assert.equal(authStorage.getRefreshToken(), 'keep-refresh');
 });
+
+test('rejected refresh token signs out so the app can return to login', async () => {
+  authStorage.setTokens('old-access', 'old-refresh');
+  globalThis.fetch = async (url) =>
+    url === '/api/v1/auth/reissue'
+      ? Response.json({ success: false, message: 'invalid refresh' }, { status: 401 })
+      : Response.json({ success: false, message: 'expired' }, { status: 401 });
+  await assert.rejects(http.api.get('/api/v1/member/me'));
+  assert.equal(authStorage.getAccessToken(), null);
+  assert.equal(authStorage.getRefreshToken(), null);
+});
+
+test('reissue server error keeps credentials for a later retry', async () => {
+  authStorage.setTokens('keep-access', 'keep-refresh');
+  globalThis.fetch = async (url) =>
+    url === '/api/v1/auth/reissue'
+      ? new Response(null, { status: 503 })
+      : Response.json({ success: false, message: 'expired' }, { status: 401 });
+  await assert.rejects(http.api.get('/api/v1/member/me'));
+  assert.equal(authStorage.getAccessToken(), 'keep-access');
+  assert.equal(authStorage.getRefreshToken(), 'keep-refresh');
+  authStorage.clear();
+});

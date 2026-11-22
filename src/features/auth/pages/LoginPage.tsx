@@ -1,6 +1,7 @@
 // src/features/auth/pages/LoginPage.tsx
 import { useSearchParams } from "react-router-dom";
 import { useState } from "react";
+import { SESSION_EXPIRED_KEY } from "../../../api/http";
 import MobileLayout from "../../../layout/MobileLayout";
 import logo from "../../../assets/약학다식 로고.png";
 import kakaoIcon from "../../../assets/카카오톡로고.png";
@@ -27,6 +28,16 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const error = searchParams.get("error");
   const [loginError, setLoginError] = useState(false);
+  // 로그인 연장에 실패해서 넘어온 경우 한 번만 안내
+  const [expired] = useState(() => {
+    try {
+      const value = sessionStorage.getItem(SESSION_EXPIRED_KEY) === "1";
+      sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+      return value;
+    } catch {
+      return false;
+    }
+  });
 
   const moveToOAuth = async (provider: Provider) => {
     try {
@@ -57,6 +68,11 @@ export default function LoginPage() {
           </h1>
         </div>
 
+        {expired && !error && !loginError && (
+          <p className="mt-6 rounded-xl bg-primary-50 px-4 py-3 text-sm text-primary">
+            로그인이 만료됐어요. 다시 로그인해 주세요.
+          </p>
+        )}
         {(error || loginError) && (
           <p className="mt-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-500">
             로그인에 실패했어요. 다시 시도해 주세요.
