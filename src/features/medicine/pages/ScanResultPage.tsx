@@ -151,8 +151,6 @@ export default function ScanResultPage() {
                 disabled={busy}
                 open={openKey === key}
                 detail={details[d.drugId]}
-                preview={preview}
-                imageSize={result.imageSize}
                 onToggleCheck={() => toggleCheck(d.detectionId)}
                 onToggleOpen={() => toggleOpen(key, d.drugId)}
                 onRetry={() => void loadDetail(d.drugId)}

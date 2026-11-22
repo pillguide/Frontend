@@ -1,8 +1,7 @@
-// 스캔 결과의 약 카드: 체크로 저장 대상을 고르고, 카드를 누르면 아래에 사진 비교와 약 정보가 펼쳐진다
+// 스캔 결과의 약 카드: 체크로 저장 대상을 고르고, 카드를 누르면 아래에 약 정보가 펼쳐진다
 import { Check, ChevronDown, Pill } from "lucide-react";
-import type { ScanDrugDetail, ScanDrugSummary, ScanSessionDetail } from "../api/scanApi";
+import type { ScanDrugDetail, ScanDrugSummary } from "../api/scanApi";
 import RepresentativePhoto from "./RepresentativePhoto";
-import ReferenceComparison from "./ReferenceComparison";
 import DrugInfoRows from "./DrugInfoRows";
 
 export type DetailState = { data?: ScanDrugDetail; error?: boolean } | undefined;
@@ -13,15 +12,13 @@ interface Props {
   disabled: boolean;
   open: boolean;
   detail: DetailState;
-  preview: string | null;
-  imageSize: ScanSessionDetail["imageSize"];
   onToggleCheck: () => void;
   onToggleOpen: () => void;
   onRetry: () => void;
 }
 
 export default function ScanDrugCard({
-  drug, checked, disabled, open, detail, preview, imageSize, onToggleCheck, onToggleOpen, onRetry,
+  drug, checked, disabled, open, detail, onToggleCheck, onToggleOpen, onRetry,
 }: Props) {
   const ready = drug.representativeImageStatus === "READY";
   const canCheck = drug.detectionId !== null && !disabled;
@@ -63,17 +60,8 @@ export default function ScanDrugCard({
       </div>
 
       {open && (
-        <div className="border-t border-slate-100 px-4 pb-2 pt-4">
-          <ReferenceComparison
-            variant="inline"
-            drugId={drug.drugId}
-            imageUrl={drug.imageUrl}
-            ready={ready}
-            preview={preview}
-            detection={drug.detectionId === null ? undefined : drug}
-            imageSize={imageSize}
-          />
-          <div className="mt-4">
+        <div className="border-t border-slate-100 p-4">
+          <div>
             {detail?.data ? (
               <DrugInfoRows info={detail.data} />
             ) : detail?.error ? (
