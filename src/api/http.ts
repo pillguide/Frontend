@@ -47,6 +47,18 @@ export async function withReissuePausedForLogout<T>(operation: () => Promise<T>)
   }
 }
 
+export const SESSION_EXPIRED_KEY = "sessionExpired";
+
+/** 로그인이 끝난 상태로 정리 → AuthGate가 로그인 화면으로 보내고, 로그인 화면에 "다시 로그인" 안내 */
+function expireSession() {
+  try {
+    sessionStorage.setItem(SESSION_EXPIRED_KEY, "1");
+  } catch {
+    /* 안내 문구만 못 띄울 뿐 로그아웃은 진행 */
+  }
+  authStorage.clear();
+}
+
 async function reissueTokens(): Promise<boolean> {
   const refreshToken = authStorage.getRefreshToken();
   if (!refreshToken) return false;
@@ -56,6 +68,12 @@ async function reissueTokens(): Promise<boolean> {
       headers: { "X-Refresh-Token": refreshToken },
     });
     const body = await parseEnvelope<{ accessToken: string; refreshToken: string }>(res);
+    // 서버가 리프레시 토큰을 거절(만료·무효·다른 기기에서 로그아웃)하면 다시 로그인해야 한다.
+    // 네트워크 오류나 서버 장애(5xx)는 잠깐일 수 있으니 로그인 상태를 유지한다.
+    if (res.status >= 400 && res.status < 500 && !logoutPending) {
+      expireSession();
+      return false;
+    }
     if (!res.ok || !body?.data) return false;
     authStorage.setTokens(body.data.accessToken, body.data.refreshToken);
     return true;
@@ -78,6 +96,9 @@ export async function apiRequest<T = void>(path: string, init: RequestInit = {},
       reissuing = null;
     });
     if (await reissuing) return apiRequest<T>(path, init, false);
+  } else if (res.status === 401 && accessToken && !authStorage.getRefreshToken() && !logoutPending) {
+    // 리프레시 토큰이 없어서 연장할 방법이 없음
+    expireSession();
   }
 
   const body = await parseEnvelope<T>(res);
