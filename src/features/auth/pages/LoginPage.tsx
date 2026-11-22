@@ -1,8 +1,7 @@
 // src/features/auth/pages/LoginPage.tsx
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import MobileLayout from "../../../layout/MobileLayout";
-import { ROUTES } from "../../../constants/routes";
 import logo from "../../../assets/약학다식 로고.png";
 import kakaoIcon from "../../../assets/카카오톡로고.png";
 import naverIcon from "../../../assets/네이버로고.png";
@@ -25,7 +24,6 @@ const providers: {
 ];
 
 export default function LoginPage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const error = searchParams.get("error");
   const [loginError, setLoginError] = useState(false);
@@ -88,14 +86,6 @@ export default function LoginPage() {
           ))}
         </div>
 
-        {/* 백엔드 연결 전 데모용 진입점 */}
-        <button
-          type="button"
-          onClick={() => navigate(ROUTES.HOME)}
-          className="mt-6 text-sm text-slate-400 underline underline-offset-4"
-        >
-          로그인 없이 둘러보기
-        </button>
       </div>
     </MobileLayout>
   );
