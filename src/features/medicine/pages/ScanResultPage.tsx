@@ -1,9 +1,11 @@
 // 스캔 결과: 인식된 약 고르기 + 카드를 누르면 그 자리에서 약 정보 펼치기 + 병용 확인
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Camera } from "lucide-react";
+import { Bell, Camera, Home } from "lucide-react";
+import toast from "react-hot-toast";
 import MobileLayout from "../../../layout/MobileLayout";
 import PageHeader from "../../../components/common/PageHeader";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { ROUTES } from "../../../constants/routes";
 import { useScanSheet } from "../context/scanSheet";
 import { myDrugApi } from "../api/myDrugApi";
@@ -20,6 +22,8 @@ export default function ScanResultPage() {
   const [error, setError] = useState("");
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [details, setDetails] = useState<Record<number, DetailState>>({});
+  // 뒤로·홈을 누르면 저장 안 하고 나갈지 묻는다. 값은 확인 후 갈 곳
+  const [leaveTo, setLeaveTo] = useState<"back" | "home" | null>(null);
   const mounted = useRef(false);
   useEffect(() => {
     mounted.current = true;
@@ -72,10 +76,12 @@ export default function ScanResultPage() {
     setBusy(true);
     setError("");
     try {
-      await myDrugApi.save(result.sessionId, selected);
+      const saved = await myDrugApi.save(result.sessionId, selected);
       if (mounted.current && scanDraft.isCurrent(generation)) {
         scanDraft.clear();
-        navigate(ROUTES.MY_DRUGS);
+        toast.success(`선택한 약 ${selected.length}개를 내 약에 저장했어요`);
+        // 결과 화면을 내 약으로 바꿔 끼워서 내 약에서 뒤로 가면 스캔을 시작한 화면으로
+        navigate(ROUTES.MY_DRUGS, { replace: true, state: { newIds: saved.map((d) => d.memberDrugId) } });
       }
     } catch {
       if (mounted.current && scanDraft.isCurrent(generation)) setError("저장하지 못했어요. 다시 시도해 주세요");
@@ -97,10 +103,26 @@ export default function ScanResultPage() {
     );
   }
 
+  const leave = () => {
+    const to = leaveTo;
+    setLeaveTo(null);
+    scanDraft.clear();
+    if (to === "home") navigate(ROUTES.HOME, { replace: true });
+    else navigate(-1);
+  };
+
   return (
     <MobileLayout showBottomNav={false}>
       <div className="flex min-h-full flex-col bg-[#f4f5f9]">
-        <PageHeader title="스캔 결과" />
+        <PageHeader
+          title="스캔 결과"
+          onBack={() => setLeaveTo("back")}
+          rightAction={
+            <button type="button" onClick={() => setLeaveTo("home")} className="p-2" aria-label="홈으로">
+              <Home size={22} />
+            </button>
+          }
+        />
         <div className="flex-1 space-y-3 px-4 pb-6 pt-4">
           <div className="relative h-[200px] overflow-hidden rounded-[20px] bg-white">
             {preview && <img src={preview} alt="스캔한 사진" className="h-full w-full object-contain" />}
@@ -178,6 +200,15 @@ export default function ScanResultPage() {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={leaveTo !== null}
+        title="저장하지 않고 나갈까요?"
+        message="스캔기록에서 다시 볼 수 있어요"
+        confirmLabel="나가기"
+        cancelLabel="계속 보기"
+        onConfirm={leave}
+        onCancel={() => setLeaveTo(null)}
+      />
     </MobileLayout>
   );
 }
